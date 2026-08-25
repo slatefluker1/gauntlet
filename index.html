@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Gauntlet — 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E1521;
+  --brand:#1B2A41;
+  --brand-2:#26374F;
+  --paper:#EEF1F5;
+  --card:#FFFFFF;
+  --line:#DFE4EA;
+  --muted:#69737F;
+  --gold:#C8A24A;
+  --win:#1B7F4B;
+  --loss:#B3261E;
+  --rail:264px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.disp{font-family:"Barlow Condensed",Inter,sans-serif;letter-spacing:.01em}
+.mono{font-family:"Roboto Mono",ui-monospace,monospace}
+
+/* ---------- shell ---------- */
+.shell{display:flex;min-height:100vh}
+.rail{
+  width:var(--rail);flex:0 0 var(--rail);
+  background:var(--brand);color:#fff;
+  position:sticky;top:0;height:100vh;
+  display:flex;flex-direction:column;
+  border-right:1px solid rgba(255,255,255,.08);
+}
+.brand{padding:22px 22px 18px;border-bottom:1px solid rgba(255,255,255,.10)}
+.brand .mark{
+  font-family:"Barlow Condensed",sans-serif;
+  font-size:30px;font-weight:700;line-height:.95;
+  text-transform:uppercase;letter-spacing:.02em;
+}
+.brand .mark span{color:var(--gold)}
+.brand .sub{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,255,255,.55);margin-top:7px;font-weight:600;
+}
+.nav{padding:12px 0;flex:1;overflow-y:auto}
+.nav button{
+  width:100%;text-align:left;background:none;border:0;color:rgba(255,255,255,.72);
+  font:inherit;font-weight:500;padding:11px 22px;cursor:pointer;
+  display:flex;align-items:center;gap:11px;border-left:3px solid transparent;
+}
+.nav button:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav button.on{background:rgba(255,255,255,.10);color:#fff;border-left-color:var(--gold);font-weight:600}
+.nav .ico{width:17px;height:17px;flex:0 0 17px;opacity:.9}
+.railfoot{padding:14px 22px 20px;font-size:11px;color:rgba(255,255,255,.42);border-top:1px solid rgba(255,255,255,.10);line-height:1.5}
+
+.main{flex:1;min-width:0}
+.topbar{display:none}
+.wrap{max-width:1040px;margin:0 auto;padding:26px 26px 72px}
+
+.phead{margin:0 0 18px}
+.phead h1{
+  font-size:34px;font-weight:700;margin:0;text-transform:uppercase;letter-spacing:.01em;
+}
+.phead p{margin:5px 0 0;color:var(--muted);font-size:13.5px}
+
+/* ---------- cards ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card + .card{margin-top:16px}
+.card-h{
+  padding:13px 16px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:#FAFBFC;
+}
+.card-h h2{font-size:17px;margin:0;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.card-h .hint{font-size:12px;color:var(--muted);font-weight:500}
+
+/* ---------- standings ---------- */
+table{width:100%;border-collapse:collapse}
+th{
+  font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;text-align:left;padding:9px 16px;border-bottom:1px solid var(--line);
+  background:#FAFBFC;
+}
+td{padding:12px 16px;border-bottom:1px solid #EFF2F5;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.rank{
+  font-family:"Barlow Condensed",sans-serif;font-size:22px;font-weight:700;
+  width:34px;color:var(--muted);text-align:center
+}
+tr.lead .rank{color:var(--gold)}
+.who{font-weight:600;font-size:15.5px}
+.pts{
+  font-family:"Barlow Condensed",sans-serif;font-size:26px;font-weight:700;
+  text-align:right;width:70px
+}
+.bar{height:5px;background:#EAEEF2;border-radius:3px;overflow:hidden;margin-top:6px;max-width:230px}
+.bar i{display:block;height:100%;background:var(--brand);border-radius:3px}
+tr.lead .bar i{background:var(--gold)}
+
+/* ---------- team chips ---------- */
+.chip{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:6px 11px;border-radius:6px;font-weight:600;font-size:13.5px;
+  line-height:1.2;border:1px solid rgba(0,0,0,.10);
+}
+.chip .rec{font-size:11px;opacity:.82;font-weight:500;font-family:"Roboto Mono",monospace}
+
+/* ---------- roster wall ---------- */
+.squads{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.squad .card-h{background:var(--brand);color:#fff;border-bottom:0}
+.squad .card-h h2{font-size:18px}
+.squad .card-h .tot{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:700;color:var(--gold)}
+.tiles{display:flex;flex-direction:column}
+.tile{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 13px;border-bottom:1px solid rgba(0,0,0,.07);
+  font-weight:600;font-size:14px;
+}
+.tile:last-child{border-bottom:0}
+.tile .rec{font-family:"Roboto Mono",monospace;font-size:11.5px;opacity:.85;font-weight:500}
+.tile .cf{font-size:10px;letter-spacing:.09em;text-transform:uppercase;opacity:.75;font-weight:700}
+
+/* ---------- weeks ---------- */
+.weekbar{display:flex;gap:6px;overflow-x:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch}
+.weekbar button{
+  flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:7px;
+  padding:8px 13px;font:inherit;font-weight:600;font-size:13px;cursor:pointer;color:var(--muted)
+}
+.weekbar button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.ownerblock{margin-bottom:14px}
+.ownerblock .oh{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:11px 16px;background:var(--brand);color:#fff;border-radius:9px 9px 0 0;
+}
+.ownerblock .oh .nm{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:700;text-transform:uppercase}
+.ownerblock .oh .wk{font-size:13px;font-weight:600}
+.ownerblock .oh .wk b{color:var(--gold);font-size:17px;font-family:"Barlow Condensed",sans-serif}
+.games{background:#fff;border:1px solid var(--line);border-top:0;border-radius:0 0 9px 9px}
+.g{display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:1px solid #EFF2F5;font-size:14px}
+.g:last-child{border-bottom:0}
+.g .res{
+  width:20px;flex:0 0 20px;text-align:center;font-weight:700;font-size:13px;
+  font-family:"Roboto Mono",monospace
+}
+.g .res.w{color:var(--win)}
+.g .res.l{color:var(--loss)}
+.g .res.p{color:#B9C0C8}
+.g .mt{flex:1;min-width:0}
+.g .mt .vs{color:var(--muted);font-size:12.5px}
+.g .sc{font-family:"Roboto Mono",monospace;font-size:13px;color:var(--muted);white-space:nowrap}
+.g .pt{
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:17px;
+  width:30px;text-align:right
+}
+.badge{
+  display:inline-block;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;padding:2px 6px;border-radius:4px;background:#FDF3DC;color:#8A6A16;
+  border:1px solid #EFDCA9;margin-left:6px;vertical-align:1px
+}
+
+/* ---------- money ---------- */
+.moneygrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.mstat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.mstat .k{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.mstat .v{font-family:"Barlow Condensed",sans-serif;font-size:32px;font-weight:700;line-height:1.05;margin-top:3px}
+.mstat .v.gold{color:var(--gold)}
+.chart{padding:16px}
+.chartwrap{position:relative;height:210px}
+svg{display:block;width:100%;height:100%;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:12px;padding:0 16px 14px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.legend i{width:11px;height:3px;border-radius:2px;display:inline-block}
+
+/* ---------- waivers ---------- */
+.filters{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line);background:#FAFBFC}
+.filters button{
+  border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 13px;
+  font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--muted)
+}
+.filters button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:8px;padding:14px 16px}
+.prio{display:flex;flex-direction:column}
+.prow{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid #EFF2F5}
+.prow:last-child{border-bottom:0}
+.prow .n{
+  width:26px;height:26px;flex:0 0 26px;border-radius:50%;background:var(--brand);color:#fff;
+  display:grid;place-items:center;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:15px
+}
+.prow.first .n{background:var(--gold)}
+.prow .nm{font-weight:600;flex:1}
+.prow .pp{font-size:12.5px;color:var(--muted);font-family:"Roboto Mono",monospace}
+
+/* ---------- moves ---------- */
+.move{display:flex;gap:13px;padding:14px 16px;border-bottom:1px solid #EFF2F5}
+.move:last-child{border-bottom:0}
+.move .d{
+  font-family:"Roboto Mono",monospace;font-size:11.5px;color:var(--muted);
+  width:74px;flex:0 0 74px;padding-top:3px
+}
+.move .b{flex:1}
+.move .kind{
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+  padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:5px
+}
+.kind.trade{background:#E7F0FB;color:#1B4E8A;border:1px solid #C6DCF3}
+.kind.waiver{background:#EAF6EE;color:#1B6B41;border:1px solid #C5E5D2}
+.kind.fa{background:#F3EEFA;color:#5B3C8A;border:1px solid #DCCDF0}
+
+/* ---------- empty ---------- */
+.empty{padding:34px 22px;text-align:center;color:var(--muted)}
+.empty .big{
+  font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:600;
+  color:var(--ink);margin-bottom:5px
+}
+.empty p{margin:0;font-size:13.5px;max-width:400px;margin-inline:auto}
+
+/* ---------- mobile ---------- */
+@media (max-width:860px){
+  .shell{display:block}
+  .rail{
+    position:fixed;left:0;top:0;bottom:0;z-index:60;width:252px;flex-basis:252px;
+    transform:translateX(-100%);transition:transform .22s ease;height:100dvh
+  }
+  body.menu .rail{transform:none}
+  .scrim{
+    position:fixed;inset:0;background:rgba(10,16,26,.5);z-index:55;opacity:0;
+    pointer-events:none;transition:opacity .22s
+  }
+  body.menu .scrim{opacity:1;pointer-events:auto}
+  .topbar{
+    display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:40;
+    background:var(--brand);color:#fff;padding:11px 14px;
+    padding-top:calc(11px + env(safe-area-inset-top));
+  }
+  .topbar .burger{
+    background:none;border:0;padding:5px;cursor:pointer;display:grid;gap:4px;
+  }
+  .topbar .burger i{display:block;width:20px;height:2px;background:#fff;border-radius:2px}
+  .topbar .t{
+    font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.02em
+  }
+  .topbar .t span{color:var(--gold)}
+  .wrap{padding:18px 14px 64px}
+  .phead h1{font-size:27px}
+  .squads{grid-template-columns:1fr}
+  td,th{padding-left:12px;padding-right:12px}
+  .pts{font-size:23px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important;animation:none !important}
+}
+:focus-visible{outline:2.5px solid var(--gold);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="scrim" onclick="document.body.classList.remove('menu')"></div>
+
+<div class="topbar">
+  <button class="burger" aria-label="Menu" onclick="document.body.classList.toggle('menu')">
+    <i></i><i></i><i></i>
+  </button>
+  <div class="t">The <span>Gauntlet</span></div>
+</div>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="brand">
+      <div class="mark">The<br><span>Gauntlet</span></div>
+      <div class="sub">2026 Season</div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="railfoot" id="foot"></div>
+  </aside>
+
+  <main class="main">
+    <div class="wrap" id="view"></div>
+  </main>
+</div>
+
+<script>
+const D = {"owners":["Davis","Chase","Slate","Graydon","Carter","Jack"],"draftSlot":{"Davis":1,"Chase":2,"Slate":3,"Graydon":4,"Carter":5,"Jack":6},"stints":[{"team":"Georgia","owner":"Davis","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Penn State","owner":"Davis","start":"2026-08-22","end":null,"via":"Draft"},{"team":"SMU","owner":"Davis","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Iowa","owner":"Davis","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Florida","owner":"Davis","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Memphis","owner":"Davis","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Kansas State","owner":"Davis","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Pittsburgh","owner":"Davis","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Ohio State","owner":"Chase","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Ole Miss","owner":"Chase","start":"2026-08-22","end":null,"via":"Draft"},{"team":"BYU","owner":"Chase","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Tennessee","owner":"Chase","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Virginia Tech","owner":"Chase","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Missouri","owner":"Chase","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Nebraska","owner":"Chase","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Florida State","owner":"Chase","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Miami","owner":"Slate","start":"2026-08-22","end":null,"via":"Draft"},{"team":"USC","owner":"Slate","start":"2026-08-22","end":null,"via":"Draft"},{"team":"LSU","owner":"Slate","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Oklahoma","owner":"Slate","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Houston","owner":"Slate","start":"2026-08-22","end":null,"via":"Draft"},{"team":"UNLV","owner":"Slate","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Toledo","owner":"Slate","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Wisconsin","owner":"Slate","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Notre Dame","owner":"Graydon","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Texas","owner":"Graydon","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Michigan","owner":"Graydon","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Georgia Tech","owner":"Graydon","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Utah","owner":"Graydon","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Illinois","owner":"Graydon","start":"2026-08-22","end":null,"via":"Draft"},{"team":"South Carolina","owner":"Graydon","start":"2026-08-22","end":null,"via":"Draft"},{"team":"James Madison","owner":"Graydon","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Oregon","owner":"Carter","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Indiana","owner":"Carter","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Clemson","owner":"Carter","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Texas A&M","owner":"Carter","start":"2026-08-22","end":null,"via":"Draft"},{"team":"TCU","owner":"Carter","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Boise State","owner":"Carter","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Auburn","owner":"Carter","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Western Michigan","owner":"Carter","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Texas Tech","owner":"Jack","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Alabama","owner":"Jack","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Washington","owner":"Jack","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Louisville","owner":"Jack","start":"2026-08-22","end":null,"via":"Draft"},{"team":"UCLA","owner":"Jack","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Navy","owner":"Jack","start":"2026-08-22","end":null,"via":"Draft"},{"team":"Vanderbilt","owner":"Jack","start":"2026-08-22","end":null,"via":"Draft"},{"team":"North Dakota State","owner":"Jack","start":"2026-08-22","end":null,"via":"Draft"}],"teams":{"Air Force":{"conf":"Non-P4"},"Akron":{"conf":"Non-P4"},"Alabama":{"conf":"SEC"},"App State":{"conf":"Non-P4"},"Arizona":{"conf":"Big 12"},"Arizona State":{"conf":"Big 12"},"Arkansas":{"conf":"SEC"},"Arkansas State":{"conf":"Non-P4"},"Army":{"conf":"Non-P4"},"Auburn":{"conf":"SEC"},"BYU":{"conf":"Big 12"},"Ball State":{"conf":"Non-P4"},"Baylor":{"conf":"Big 12"},"Boise State":{"conf":"Non-P4"},"Boston College":{"conf":"ACC"},"Bowling Green":{"conf":"Non-P4"},"Buffalo":{"conf":"Non-P4"},"California":{"conf":"ACC"},"Central Michigan":{"conf":"Non-P4"},"Charlotte":{"conf":"Non-P4"},"Cincinnati":{"conf":"Big 12"},"Clemson":{"conf":"ACC"},"Coastal Carolina":{"conf":"Non-P4"},"Colorado":{"conf":"Big 12"},"Colorado State":{"conf":"Non-P4"},"Delaware":{"conf":"Non-P4"},"Duke":{"conf":"ACC"},"East Carolina":{"conf":"Non-P4"},"Eastern Michigan":{"conf":"Non-P4"},"Florida":{"conf":"SEC"},"Florida Atlantic":{"conf":"Non-P4"},"Florida International":{"conf":"Non-P4"},"Florida State":{"conf":"ACC"},"Fresno State":{"conf":"Non-P4"},"Georgia":{"conf":"SEC"},"Georgia Southern":{"conf":"Non-P4"},"Georgia State":{"conf":"Non-P4"},"Georgia Tech":{"conf":"ACC"},"Hawai'i":{"conf":"Non-P4"},"Houston":{"conf":"Big 12"},"Illinois":{"conf":"Big Ten"},"Indiana":{"conf":"Big Ten"},"Iowa":{"conf":"Big Ten"},"Iowa State":{"conf":"Big 12"},"Jacksonville State":{"conf":"Non-P4"},"James Madison":{"conf":"Non-P4"},"Kansas":{"conf":"Big 12"},"Kansas State":{"conf":"Big 12"},"Kennesaw State":{"conf":"Non-P4"},"Kent State":{"conf":"Non-P4"},"Kentucky":{"conf":"SEC"},"LSU":{"conf":"SEC"},"Liberty":{"conf":"Non-P4"},"Louisiana":{"conf":"Non-P4"},"Louisiana Tech":{"conf":"Non-P4"},"Louisville":{"conf":"ACC"},"Marshall":{"conf":"Non-P4"},"Maryland":{"conf":"Big Ten"},"Memphis":{"conf":"Non-P4"},"Miami":{"conf":"ACC"},"Miami (OH)":{"conf":"Non-P4"},"Michigan":{"conf":"Big Ten"},"Michigan State":{"conf":"Big Ten"},"Middle Tennessee":{"conf":"Non-P4"},"Minnesota":{"conf":"Big Ten"},"Mississippi State":{"conf":"SEC"},"Missouri":{"conf":"SEC"},"Missouri State":{"conf":"Non-P4"},"NC State":{"conf":"ACC"},"Navy":{"conf":"Non-P4"},"Nebraska":{"conf":"Big Ten"},"Nevada":{"conf":"Non-P4"},"New Mexico":{"conf":"Non-P4"},"New Mexico State":{"conf":"Non-P4"},"North Carolina":{"conf":"ACC"},"North Texas":{"conf":"Non-P4"},"Northern Illinois":{"conf":"Non-P4"},"Northwestern":{"conf":"Big Ten"},"Notre Dame":{"conf":"Non-P4"},"Ohio":{"conf":"Non-P4"},"Ohio State":{"conf":"Big Ten"},"Oklahoma":{"conf":"SEC"},"Oklahoma State":{"conf":"Big 12"},"Old Dominion":{"conf":"Non-P4"},"Ole Miss":{"conf":"SEC"},"Oregon":{"conf":"Big Ten"},"Oregon State":{"conf":"Non-P4"},"Penn State":{"conf":"Big Ten"},"Pittsburgh":{"conf":"ACC"},"Purdue":{"conf":"Big Ten"},"Rice":{"conf":"Non-P4"},"Rutgers":{"conf":"Big Ten"},"SMU":{"conf":"ACC"},"Sacramento State":{"conf":"Non-P4"},"Sam Houston":{"conf":"Non-P4"},"San Diego State":{"conf":"Non-P4"},"San Jos\u00e9 State":{"conf":"Non-P4"},"South Alabama":{"conf":"Non-P4"},"South Carolina":{"conf":"SEC"},"South Florida":{"conf":"Non-P4"},"Southern Miss":{"conf":"Non-P4"},"Stanford":{"conf":"ACC"},"Syracuse":{"conf":"ACC"},"TCU":{"conf":"Big 12"},"Temple":{"conf":"Non-P4"},"Tennessee":{"conf":"SEC"},"Texas":{"conf":"SEC"},"Texas A&M":{"conf":"SEC"},"Texas State":{"conf":"Non-P4"},"Texas Tech":{"conf":"Big 12"},"Toledo":{"conf":"Non-P4"},"Troy":{"conf":"Non-P4"},"Tulane":{"conf":"Non-P4"},"Tulsa":{"conf":"Non-P4"},"UAB":{"conf":"Non-P4"},"UCF":{"conf":"Big 12"},"UCLA":{"conf":"Big Ten"},"UConn":{"conf":"Non-P4"},"UL Monroe":{"conf":"Non-P4"},"UMass":{"conf":"Non-P4"},"UNLV":{"conf":"Non-P4"},"USC":{"conf":"Big Ten"},"UTEP":{"conf":"Non-P4"},"UTSA":{"conf":"Non-P4"},"Utah":{"conf":"Big 12"},"Utah State":{"conf":"Non-P4"},"Vanderbilt":{"conf":"SEC"},"Virginia":{"conf":"ACC"},"Virginia Tech":{"conf":"ACC"},"Wake Forest":{"conf":"ACC"},"Washington":{"conf":"Big Ten"},"Washington State":{"conf":"Non-P4"},"West Virginia":{"conf":"Big 12"},"Western Kentucky":{"conf":"Non-P4"},"Western Michigan":{"conf":"Non-P4"},"Wisconsin":{"conf":"Big Ten"},"Wyoming":{"conf":"Non-P4"},"North Dakota State":{"conf":"FCS"}},"games":[{"week":1,"date":"2026-08-29","home":"TCU","homePts":null,"away":"North Carolina","awayPts":null},{"week":1,"date":"2026-08-29","home":"USC","homePts":null,"away":"San Jos\u00e9 State","awayPts":null},{"week":1,"date":"2026-08-29","home":"North Dakota State","homePts":null,"away":"Jacksonville State","awayPts":null},{"week":1,"date":"2026-08-29","home":"Florida State","homePts":null,"away":"New Mexico State","awayPts":null},{"week":1,"date":"2026-08-30","home":"UNLV","homePts":null,"away":"Memphis","awayPts":null},{"week":1,"date":"2026-09-04","home":"Georgia Tech","homePts":null,"away":"Colorado","awayPts":null},{"week":1,"date":"2026-09-04","home":"Missouri","homePts":null,"away":"Arkansas-Pine Bluff","awayPts":null},{"week":1,"date":"2026-09-04","home":"Illinois","homePts":null,"away":"UAB","awayPts":null},{"week":1,"date":"2026-09-04","home":"Utah","homePts":null,"away":"Idaho","awayPts":null},{"week":1,"date":"2026-09-05","home":"Michigan State","homePts":null,"away":"Toledo","awayPts":null},{"week":1,"date":"2026-09-05","home":"Oklahoma","homePts":null,"away":"UTEP","awayPts":null},{"week":1,"date":"2026-09-05","home":"Stanford","homePts":null,"away":"Miami","awayPts":null},{"week":1,"date":"2026-09-05","home":"USC","homePts":null,"away":"Fresno State","awayPts":null},{"week":1,"date":"2026-09-05","home":"Indiana","homePts":null,"away":"North Texas","awayPts":null},{"week":1,"date":"2026-09-05","home":"Nebraska","homePts":null,"away":"Ohio","awayPts":null},{"week":1,"date":"2026-09-05","home":"Alabama","homePts":null,"away":"East Carolina","awayPts":null},{"week":1,"date":"2026-09-05","home":"Houston","homePts":null,"away":"Oregon State","awayPts":null},{"week":1,"date":"2026-09-05","home":"James Madison","homePts":null,"away":"Liberty","awayPts":null},{"week":1,"date":"2026-09-05","home":"Ohio State","homePts":null,"away":"Ball State","awayPts":null},{"week":1,"date":"2026-09-05","home":"Pittsburgh","homePts":null,"away":"Miami (OH)","awayPts":null},{"week":1,"date":"2026-09-05","home":"South Carolina","homePts":null,"away":"Kent State","awayPts":null},{"week":1,"date":"2026-09-05","home":"Georgia","homePts":null,"away":"Tennessee State","awayPts":null},{"week":1,"date":"2026-09-05","home":"North Dakota State","homePts":null,"away":"Fordham","awayPts":null},{"week":1,"date":"2026-09-05","home":"Tennessee","homePts":null,"away":"Furman","awayPts":null},{"week":1,"date":"2026-09-05","home":"Navy","homePts":null,"away":"Towson","awayPts":null},{"week":1,"date":"2026-09-05","home":"Texas","homePts":null,"away":"Texas State","awayPts":null},{"week":1,"date":"2026-09-05","home":"Penn State","homePts":null,"away":"Marshall","awayPts":null},{"week":1,"date":"2026-09-05","home":"Oregon","homePts":null,"away":"Boise State","awayPts":null},{"week":1,"date":"2026-09-05","home":"Auburn","homePts":null,"away":"Baylor","awayPts":null},{"week":1,"date":"2026-09-05","home":"Iowa","homePts":null,"away":"Northern Illinois","awayPts":null},{"week":1,"date":"2026-09-05","home":"Kansas State","homePts":null,"away":"Nicholls","awayPts":null},{"week":1,"date":"2026-09-05","home":"Memphis","homePts":null,"away":"Arkansas State","awayPts":null},{"week":1,"date":"2026-09-05","home":"Vanderbilt","homePts":null,"away":"Austin Peay","awayPts":null},{"week":1,"date":"2026-09-05","home":"Texas A&M","homePts":null,"away":"Missouri State","awayPts":null},{"week":1,"date":"2026-09-05","home":"Texas Tech","homePts":null,"away":"Abilene Christian","awayPts":null},{"week":1,"date":"2026-09-05","home":"Virginia Tech","homePts":null,"away":"VMI","awayPts":null},{"week":1,"date":"2026-09-05","home":"LSU","homePts":null,"away":"Clemson","awayPts":null},{"week":1,"date":"2026-09-05","home":"Michigan","homePts":null,"away":"Western Michigan","awayPts":null},{"week":1,"date":"2026-09-05","home":"Florida","homePts":null,"away":"Florida Atlantic","awayPts":null},{"week":1,"date":"2026-09-06","home":"BYU","homePts":null,"away":"Utah Tech","awayPts":null},{"week":1,"date":"2026-09-06","home":"Hawai'i","homePts":null,"away":"UNLV","awayPts":null},{"week":1,"date":"2026-09-06","home":"California","homePts":null,"away":"UCLA","awayPts":null},{"week":1,"date":"2026-09-06","home":"Washington","homePts":null,"away":"Washington State","awayPts":null},{"week":1,"date":"2026-09-06","home":"Notre Dame","homePts":null,"away":"Wisconsin","awayPts":null},{"week":1,"date":"2026-09-06","home":"Ole Miss","homePts":null,"away":"Louisville","awayPts":null},{"week":1,"date":"2026-09-07","home":"Florida State","homePts":null,"away":"SMU","awayPts":null},{"week":2,"date":"2026-09-11","home":"Miami","homePts":null,"away":"Florida A&M","awayPts":null},{"week":2,"date":"2026-09-11","home":"Louisville","homePts":null,"away":"Villanova","awayPts":null},{"week":2,"date":"2026-09-12","home":"Kansas","homePts":null,"away":"Missouri","awayPts":null},{"week":2,"date":"2026-09-12","home":"Kansas State","homePts":null,"away":"Washington State","awayPts":null},{"week":2,"date":"2026-09-12","home":"Michigan","homePts":null,"away":"Oklahoma","awayPts":null},{"week":2,"date":"2026-09-12","home":"Texas A&M","homePts":null,"away":"Arizona State","awayPts":null},{"week":2,"date":"2026-09-12","home":"Oklahoma State","homePts":null,"away":"Oregon","awayPts":null},{"week":2,"date":"2026-09-12","home":"Virginia Tech","homePts":null,"away":"Old Dominion","awayPts":null},{"week":2,"date":"2026-09-12","home":"Indiana","homePts":null,"away":"Howard","awayPts":null},{"week":2,"date":"2026-09-12","home":"Temple","homePts":null,"away":"Penn State","awayPts":null},{"week":2,"date":"2026-09-12","home":"Georgia","homePts":null,"away":"Western Kentucky","awayPts":null},{"week":2,"date":"2026-09-12","home":"Notre Dame","homePts":null,"away":"Rice","awayPts":null},{"week":2,"date":"2026-09-12","home":"Toledo","homePts":null,"away":"Central Connecticut","awayPts":null},{"week":2,"date":"2026-09-12","home":"Pittsburgh","homePts":null,"away":"UCF","awayPts":null},{"week":2,"date":"2026-09-12","home":"BYU","homePts":null,"away":"Arizona","awayPts":null},{"week":2,"date":"2026-09-12","home":"Illinois","homePts":null,"away":"Duke","awayPts":null},{"week":2,"date":"2026-09-12","home":"Washington","homePts":null,"away":"Utah State","awayPts":null},{"week":2,"date":"2026-09-12","home":"James Madison","homePts":null,"away":"Wagner","awayPts":null},{"week":2,"date":"2026-09-12","home":"Kentucky","homePts":null,"away":"Alabama","awayPts":null},{"week":2,"date":"2026-09-12","home":"North Texas","homePts":null,"away":"UNLV","awayPts":null},{"week":2,"date":"2026-09-12","home":"SMU","homePts":null,"away":"UC Davis","awayPts":null},{"week":2,"date":"2026-09-12","home":"Vanderbilt","homePts":null,"away":"Delaware","awayPts":null},{"week":2,"date":"2026-09-12","home":"Florida","homePts":null,"away":"Campbell","awayPts":null},{"week":2,"date":"2026-09-12","home":"Boise State","homePts":null,"away":"Memphis","awayPts":null},{"week":2,"date":"2026-09-12","home":"Western Michigan","homePts":null,"away":"Monmouth","awayPts":null},{"week":2,"date":"2026-09-12","home":"Nebraska","homePts":null,"away":"Bowling Green","awayPts":null},{"week":2,"date":"2026-09-12","home":"Houston","homePts":null,"away":"Southern","awayPts":null},{"week":2,"date":"2026-09-12","home":"Georgia Tech","homePts":null,"away":"Tennessee","awayPts":null},{"week":2,"date":"2026-09-12","home":"South Carolina","homePts":null,"away":"Towson","awayPts":null},{"week":2,"date":"2026-09-12","home":"Wisconsin","homePts":null,"away":"Western Illinois","awayPts":null},{"week":2,"date":"2026-09-12","home":"UCLA","homePts":null,"away":"San Diego State","awayPts":null},{"week":2,"date":"2026-09-12","home":"LSU","homePts":null,"away":"Louisiana Tech","awayPts":null},{"week":2,"date":"2026-09-12","home":"Clemson","homePts":null,"away":"Georgia Southern","awayPts":null},{"week":2,"date":"2026-09-12","home":"Iowa","homePts":null,"away":"Iowa State","awayPts":null},{"week":2,"date":"2026-09-12","home":"Oregon State","homePts":null,"away":"Texas Tech","awayPts":null},{"week":2,"date":"2026-09-12","home":"Texas","homePts":null,"away":"Ohio State","awayPts":null},{"week":2,"date":"2026-09-12","home":"Florida Atlantic","homePts":null,"away":"Navy","awayPts":null},{"week":2,"date":"2026-09-12","home":"Auburn","homePts":null,"away":"Southern Miss","awayPts":null},{"week":2,"date":"2026-09-12","home":"Ole Miss","homePts":null,"away":"Charlotte","awayPts":null},{"week":2,"date":"2026-09-13","home":"TCU","homePts":null,"away":"Grambling","awayPts":null},{"week":2,"date":"2026-09-13","home":"Air Force","homePts":null,"away":"North Dakota State","awayPts":null},{"week":2,"date":"2026-09-13","home":"Utah","homePts":null,"away":"Arkansas","awayPts":null},{"week":2,"date":"2026-09-13","home":"USC","homePts":null,"away":"Louisiana","awayPts":null},{"week":3,"date":"2026-09-17","home":"Pittsburgh","homePts":null,"away":"Syracuse","awayPts":null},{"week":3,"date":"2026-09-18","home":"Wake Forest","homePts":null,"away":"Miami","awayPts":null},{"week":3,"date":"2026-09-19","home":"Texas Tech","homePts":null,"away":"Houston","awayPts":null},{"week":3,"date":"2026-09-19","home":"Oregon","homePts":null,"away":"Portland State","awayPts":null},{"week":3,"date":"2026-09-19","home":"Georgia Tech","homePts":null,"away":"Mercer","awayPts":null},{"week":3,"date":"2026-09-19","home":"Kansas State","homePts":null,"away":"Tulane","awayPts":null},{"week":3,"date":"2026-09-19","home":"Arkansas","homePts":null,"away":"Georgia","awayPts":null},{"week":3,"date":"2026-09-19","home":"Penn State","homePts":null,"away":"Buffalo","awayPts":null},{"week":3,"date":"2026-09-19","home":"Clemson","homePts":null,"away":"North Carolina","awayPts":null},{"week":3,"date":"2026-09-19","home":"Ohio State","homePts":null,"away":"Kent State","awayPts":null},{"week":3,"date":"2026-09-19","home":"Wisconsin","homePts":null,"away":"Eastern Michigan","awayPts":null},{"week":3,"date":"2026-09-19","home":"Missouri","homePts":null,"away":"Troy","awayPts":null},{"week":3,"date":"2026-09-19","home":"Vanderbilt","homePts":null,"away":"NC State","awayPts":null},{"week":3,"date":"2026-09-19","home":"Illinois","homePts":null,"away":"Southern Illinois","awayPts":null},{"week":3,"date":"2026-09-19","home":"Toledo","homePts":null,"away":"Temple","awayPts":null},{"week":3,"date":"2026-09-19","home":"Utah","homePts":null,"away":"Utah State","awayPts":null},{"week":3,"date":"2026-09-19","home":"Texas A&M","homePts":null,"away":"Kentucky","awayPts":null},{"week":3,"date":"2026-09-19","home":"Michigan","homePts":null,"away":"UTEP","awayPts":null},{"week":3,"date":"2026-09-19","home":"Alabama","homePts":null,"away":"Florida State","awayPts":null},{"week":3,"date":"2026-09-19","home":"Louisville","homePts":null,"away":"SMU","awayPts":null},{"week":3,"date":"2026-09-19","home":"Rutgers","homePts":null,"away":"USC","awayPts":null},{"week":3,"date":"2026-09-19","home":"Iowa","homePts":null,"away":"Northern Iowa","awayPts":null},{"week":3,"date":"2026-09-19","home":"Indiana","homePts":null,"away":"Western Kentucky","awayPts":null},{"week":3,"date":"2026-09-19","home":"South Carolina","homePts":null,"away":"Mississippi State","awayPts":null},{"week":3,"date":"2026-09-19","home":"Memphis","homePts":null,"away":"UT Martin","awayPts":null},{"week":3,"date":"2026-09-19","home":"Rice","homePts":null,"away":"Western Michigan","awayPts":null},{"week":3,"date":"2026-09-19","home":"Auburn","homePts":null,"away":"Florida","awayPts":null},{"week":3,"date":"2026-09-19","home":"Nebraska","homePts":null,"away":"North Dakota","awayPts":null},{"week":3,"date":"2026-09-19","home":"Washington","homePts":null,"away":"Eastern Washington","awayPts":null},{"week":3,"date":"2026-09-19","home":"Colorado State","homePts":null,"away":"BYU","awayPts":null},{"week":3,"date":"2026-09-19","home":"Ole Miss","homePts":null,"away":"LSU","awayPts":null},{"week":3,"date":"2026-09-19","home":"Oklahoma","homePts":null,"away":"New Mexico","awayPts":null},{"week":3,"date":"2026-09-19","home":"Maryland","homePts":null,"away":"Virginia Tech","awayPts":null},{"week":3,"date":"2026-09-19","home":"Notre Dame","homePts":null,"away":"Michigan State","awayPts":null},{"week":3,"date":"2026-09-19","home":"Tennessee","homePts":null,"away":"Kennesaw State","awayPts":null},{"week":3,"date":"2026-09-20","home":"Texas","homePts":null,"away":"UTSA","awayPts":null},{"week":3,"date":"2026-09-20","home":"TCU","homePts":null,"away":"Arkansas State","awayPts":null},{"week":3,"date":"2026-09-20","home":"San Diego State","homePts":null,"away":"James Madison","awayPts":null},{"week":3,"date":"2026-09-20","home":"Boise State","homePts":null,"away":"South Dakota","awayPts":null},{"week":3,"date":"2026-09-20","home":"Sacramento State","homePts":null,"away":"North Dakota State","awayPts":null},{"week":3,"date":"2026-09-20","home":"UCLA","homePts":null,"away":"Purdue","awayPts":null},{"week":4,"date":"2026-09-25","home":"UAB","homePts":null,"away":"Navy","awayPts":null},{"week":4,"date":"2026-09-26","home":"Indiana","homePts":null,"away":"Northwestern","awayPts":null},{"week":4,"date":"2026-09-26","home":"California","homePts":null,"away":"Clemson","awayPts":null},{"week":4,"date":"2026-09-26","home":"Washington","homePts":null,"away":"Minnesota","awayPts":null},{"week":4,"date":"2026-09-26","home":"Maryland","homePts":null,"away":"UCLA","awayPts":null},{"week":4,"date":"2026-09-26","home":"Michigan","homePts":null,"away":"Iowa","awayPts":null},{"week":4,"date":"2026-09-26","home":"Michigan State","homePts":null,"away":"Nebraska","awayPts":null},{"week":4,"date":"2026-09-26","home":"Purdue","homePts":null,"away":"Notre Dame","awayPts":null},{"week":4,"date":"2026-09-26","home":"Western Michigan","homePts":null,"away":"Boise State","awayPts":null},{"week":4,"date":"2026-09-26","home":"Ohio State","homePts":null,"away":"Illinois","awayPts":null},{"week":4,"date":"2026-09-26","home":"Toledo","homePts":null,"away":"San Diego State","awayPts":null},{"week":4,"date":"2026-09-26","home":"Penn State","homePts":null,"away":"Wisconsin","awayPts":null},{"week":4,"date":"2026-09-26","home":"Alabama","homePts":null,"away":"South Carolina","awayPts":null},{"week":4,"date":"2026-09-26","home":"Auburn","homePts":null,"away":"Vanderbilt","awayPts":null},{"week":4,"date":"2026-09-26","home":"Florida","homePts":null,"away":"Ole Miss","awayPts":null},{"week":4,"date":"2026-09-26","home":"Georgia","homePts":null,"away":"Oklahoma","awayPts":null},{"week":4,"date":"2026-09-26","home":"LSU","homePts":null,"away":"Texas A&M","awayPts":null},{"week":4,"date":"2026-09-26","home":"Mississippi State","homePts":null,"away":"Missouri","awayPts":null},{"week":4,"date":"2026-09-26","home":"Texas Tech","homePts":null,"away":"Sam Houston","awayPts":null},{"week":4,"date":"2026-09-26","home":"Florida State","homePts":null,"away":"Central Arkansas","awayPts":null},{"week":4,"date":"2026-09-26","home":"SMU","homePts":null,"away":"Missouri State","awayPts":null},{"week":4,"date":"2026-09-26","home":"Georgia Southern","homePts":null,"away":"Houston","awayPts":null},{"week":4,"date":"2026-09-26","home":"Old Dominion","homePts":null,"away":"James Madison","awayPts":null},{"week":4,"date":"2026-09-26","home":"Akron","homePts":null,"away":"UNLV","awayPts":null},{"week":4,"date":"2026-09-26","home":"Boston College","homePts":null,"away":"Virginia Tech","awayPts":null},{"week":4,"date":"2026-09-26","home":"Louisville","homePts":null,"away":"Wake Forest","awayPts":null},{"week":4,"date":"2026-09-26","home":"USC","homePts":null,"away":"Oregon","awayPts":null},{"week":4,"date":"2026-09-26","home":"Cincinnati","homePts":null,"away":"Kansas State","awayPts":null},{"week":4,"date":"2026-09-26","home":"UCF","homePts":null,"away":"TCU","awayPts":null},{"week":4,"date":"2026-09-26","home":"Iowa State","homePts":null,"away":"Utah","awayPts":null},{"week":4,"date":"2026-09-26","home":"Tennessee","homePts":null,"away":"Texas","awayPts":null},{"week":4,"date":"2026-09-26","home":"Pittsburgh","homePts":null,"away":"Bucknell","awayPts":null},{"week":4,"date":"2026-09-26","home":"Miami","homePts":null,"away":"Central Michigan","awayPts":null},{"week":4,"date":"2026-09-27","home":"Stanford","homePts":null,"away":"Georgia Tech","awayPts":null},{"week":5,"date":"2026-10-02","home":"Virginia Tech","homePts":null,"away":"Pittsburgh","awayPts":null},{"week":5,"date":"2026-10-03","home":"Northwestern","homePts":null,"away":"Penn State","awayPts":null},{"week":5,"date":"2026-10-03","home":"James Madison","homePts":null,"away":"Marshall","awayPts":null},{"week":5,"date":"2026-10-03","home":"Colorado","homePts":null,"away":"Texas Tech","awayPts":null},{"week":5,"date":"2026-10-03","home":"Wisconsin","homePts":null,"away":"Michigan State","awayPts":null},{"week":5,"date":"2026-10-03","home":"Charlotte","homePts":null,"away":"Memphis","awayPts":null},{"week":5,"date":"2026-10-03","home":"USC","homePts":null,"away":"Washington","awayPts":null},{"week":5,"date":"2026-10-03","home":"Nebraska","homePts":null,"away":"Maryland","awayPts":null},{"week":5,"date":"2026-10-03","home":"Minnesota","homePts":null,"away":"Michigan","awayPts":null},{"week":5,"date":"2026-10-03","home":"Iowa","homePts":null,"away":"Ohio State","awayPts":null},{"week":5,"date":"2026-10-03","home":"Illinois","homePts":null,"away":"Purdue","awayPts":null},{"week":5,"date":"2026-10-03","home":"Florida State","homePts":null,"away":"Virginia","awayPts":null},{"week":5,"date":"2026-10-03","home":"North Carolina","homePts":null,"away":"Notre Dame","awayPts":null},{"week":5,"date":"2026-10-03","home":"Clemson","homePts":null,"away":"Miami","awayPts":null},{"week":5,"date":"2026-10-03","home":"NC State","homePts":null,"away":"Louisville","awayPts":null},{"week":5,"date":"2026-10-03","home":"SMU","homePts":null,"away":"Boston College","awayPts":null},{"week":5,"date":"2026-10-03","home":"Georgia","homePts":null,"away":"Vanderbilt","awayPts":null},{"week":5,"date":"2026-10-03","home":"Mississippi State","homePts":null,"away":"Alabama","awayPts":null},{"week":5,"date":"2026-10-03","home":"Missouri","homePts":null,"away":"Florida","awayPts":null},{"week":5,"date":"2026-10-03","home":"South Carolina","homePts":null,"away":"Kentucky","awayPts":null},{"week":5,"date":"2026-10-03","home":"Tennessee","homePts":null,"away":"Auburn","awayPts":null},{"week":5,"date":"2026-10-03","home":"Texas A&M","homePts":null,"away":"Arkansas","awayPts":null},{"week":5,"date":"2026-10-03","home":"TCU","homePts":null,"away":"BYU","awayPts":null},{"week":5,"date":"2026-10-03","home":"Houston","homePts":null,"away":"UCF","awayPts":null},{"week":5,"date":"2026-10-03","home":"Buffalo","homePts":null,"away":"Western Michigan","awayPts":null},{"week":5,"date":"2026-10-03","home":"Ball State","homePts":null,"away":"Toledo","awayPts":null},{"week":5,"date":"2026-10-03","home":"Air Force","homePts":null,"away":"Navy","awayPts":null},{"week":5,"date":"2026-10-03","home":"UNLV","homePts":null,"away":"California","awayPts":null},{"week":5,"date":"2026-10-03","home":"North Dakota State","homePts":null,"away":"Wyoming","awayPts":null},{"week":5,"date":"2026-10-03","home":"Boise State","homePts":null,"away":"Utah State","awayPts":null},{"week":5,"date":"2026-10-03","home":"LSU","homePts":null,"away":"McNeese","awayPts":null},{"week":5,"date":"2026-10-04","home":"Rutgers","homePts":null,"away":"Indiana","awayPts":null},{"week":6,"date":"2026-10-09","home":"Louisville","homePts":null,"away":"Florida State","awayPts":null},{"week":6,"date":"2026-10-10","home":"Washington","homePts":null,"away":"Iowa","awayPts":null},{"week":6,"date":"2026-10-10","home":"BYU","homePts":null,"away":"Iowa State","awayPts":null},{"week":6,"date":"2026-10-10","home":"Kansas State","homePts":null,"away":"Houston","awayPts":null},{"week":6,"date":"2026-10-10","home":"Vanderbilt","homePts":null,"away":"Ole Miss","awayPts":null},{"week":6,"date":"2026-10-10","home":"Missouri","homePts":null,"away":"Texas A&M","awayPts":null},{"week":6,"date":"2026-10-10","home":"Kentucky","homePts":null,"away":"LSU","awayPts":null},{"week":6,"date":"2026-10-10","home":"Florida","homePts":null,"away":"South Carolina","awayPts":null},{"week":6,"date":"2026-10-10","home":"Arkansas","homePts":null,"away":"Tennessee","awayPts":null},{"week":6,"date":"2026-10-10","home":"Alabama","homePts":null,"away":"Georgia","awayPts":null},{"week":6,"date":"2026-10-10","home":"California","homePts":null,"away":"Virginia Tech","awayPts":null},{"week":6,"date":"2026-10-10","home":"Pittsburgh","homePts":null,"away":"North Carolina","awayPts":null},{"week":6,"date":"2026-10-10","home":"Georgia Tech","homePts":null,"away":"Duke","awayPts":null},{"week":6,"date":"2026-10-10","home":"Utah","homePts":null,"away":"Kansas","awayPts":null},{"week":6,"date":"2026-10-10","home":"Toledo","homePts":null,"away":"Buffalo","awayPts":null},{"week":6,"date":"2026-10-10","home":"Western Michigan","homePts":null,"away":"Kent State","awayPts":null},{"week":6,"date":"2026-10-10","home":"Memphis","homePts":null,"away":"UAB","awayPts":null},{"week":6,"date":"2026-10-10","home":"Penn State","homePts":null,"away":"USC","awayPts":null},{"week":6,"date":"2026-10-10","home":"Oregon","homePts":null,"away":"UCLA","awayPts":null},{"week":6,"date":"2026-10-10","home":"Michigan State","homePts":null,"away":"Illinois","awayPts":null},{"week":6,"date":"2026-10-10","home":"Georgia Southern","homePts":null,"away":"James Madison","awayPts":null},{"week":6,"date":"2026-10-10","home":"Ohio State","homePts":null,"away":"Maryland","awayPts":null},{"week":6,"date":"2026-10-10","home":"Nebraska","homePts":null,"away":"Indiana","awayPts":null},{"week":6,"date":"2026-10-10","home":"Oklahoma","homePts":null,"away":"Texas","awayPts":null},{"week":6,"date":"2026-10-10","home":"Navy","homePts":null,"away":"Tulsa","awayPts":null},{"week":6,"date":"2026-10-10","home":"Notre Dame","homePts":null,"away":"Stanford","awayPts":null},{"week":6,"date":"2026-10-10","home":"UNLV","homePts":null,"away":"North Dakota State","awayPts":null},{"week":6,"date":"2026-10-11","home":"Fresno State","homePts":null,"away":"Boise State","awayPts":null},{"week":7,"date":"2026-10-16","home":"Tulane","homePts":null,"away":"Memphis","awayPts":null},{"week":7,"date":"2026-10-17","home":"Purdue","homePts":null,"away":"Washington","awayPts":null},{"week":7,"date":"2026-10-17","home":"Ole Miss","homePts":null,"away":"Missouri","awayPts":null},{"week":7,"date":"2026-10-17","home":"James Madison","homePts":null,"away":"Georgia State","awayPts":null},{"week":7,"date":"2026-10-17","home":"UTSA","homePts":null,"away":"Navy","awayPts":null},{"week":7,"date":"2026-10-17","home":"UCLA","homePts":null,"away":"Wisconsin","awayPts":null},{"week":7,"date":"2026-10-17","home":"Oregon","homePts":null,"away":"Nebraska","awayPts":null},{"week":7,"date":"2026-10-17","home":"Michigan","homePts":null,"away":"Penn State","awayPts":null},{"week":7,"date":"2026-10-17","home":"Indiana","homePts":null,"away":"Ohio State","awayPts":null},{"week":7,"date":"2026-10-17","home":"SMU","homePts":null,"away":"Virginia","awayPts":null},{"week":7,"date":"2026-10-17","home":"Boston College","homePts":null,"away":"Pittsburgh","awayPts":null},{"week":7,"date":"2026-10-17","home":"Syracuse","homePts":null,"away":"Louisville","awayPts":null},{"week":7,"date":"2026-10-17","home":"Virginia Tech","homePts":null,"away":"Georgia Tech","awayPts":null},{"week":7,"date":"2026-10-17","home":"Miami","homePts":null,"away":"Florida State","awayPts":null},{"week":7,"date":"2026-10-17","home":"Clemson","homePts":null,"away":"Charleston Southern","awayPts":null},{"week":7,"date":"2026-10-17","home":"Colorado","homePts":null,"away":"Utah","awayPts":null},{"week":7,"date":"2026-10-17","home":"Baylor","homePts":null,"away":"TCU","awayPts":null},{"week":7,"date":"2026-10-17","home":"Houston","homePts":null,"away":"Oklahoma State","awayPts":null},{"week":7,"date":"2026-10-17","home":"Kansas State","homePts":null,"away":"Kansas","awayPts":null},{"week":7,"date":"2026-10-17","home":"Texas Tech","homePts":null,"away":"Arizona State","awayPts":null},{"week":7,"date":"2026-10-17","home":"BYU","homePts":null,"away":"Notre Dame","awayPts":null},{"week":7,"date":"2026-10-17","home":"Vanderbilt","homePts":null,"away":"Arkansas","awayPts":null},{"week":7,"date":"2026-10-17","home":"Eastern Michigan","homePts":null,"away":"Toledo","awayPts":null},{"week":7,"date":"2026-10-17","home":"Central Michigan","homePts":null,"away":"Western Michigan","awayPts":null},{"week":7,"date":"2026-10-17","home":"Texas","homePts":null,"away":"Florida","awayPts":null},{"week":7,"date":"2026-10-17","home":"Tennessee","homePts":null,"away":"Alabama","awayPts":null},{"week":7,"date":"2026-10-17","home":"Oklahoma","homePts":null,"away":"Kentucky","awayPts":null},{"week":7,"date":"2026-10-17","home":"LSU","homePts":null,"away":"Mississippi State","awayPts":null},{"week":7,"date":"2026-10-17","home":"Georgia","homePts":null,"away":"Auburn","awayPts":null},{"week":7,"date":"2026-10-17","home":"Texas A&M","homePts":null,"away":"The Citadel","awayPts":null},{"week":7,"date":"2026-10-17","home":"Air Force","homePts":null,"away":"UNLV","awayPts":null},{"week":7,"date":"2026-10-17","home":"North Dakota State","homePts":null,"away":"Nevada","awayPts":null},{"week":8,"date":"2026-10-22","home":"App State","homePts":null,"away":"James Madison","awayPts":null},{"week":8,"date":"2026-10-22","home":"Memphis","homePts":null,"away":"East Carolina","awayPts":null},{"week":8,"date":"2026-10-24","home":"Kentucky","homePts":null,"away":"Vanderbilt","awayPts":null},{"week":8,"date":"2026-10-24","home":"SMU","homePts":null,"away":"California","awayPts":null},{"week":8,"date":"2026-10-24","home":"Alabama","homePts":null,"away":"Texas A&M","awayPts":null},{"week":8,"date":"2026-10-24","home":"Mississippi State","homePts":null,"away":"Oklahoma","awayPts":null},{"week":8,"date":"2026-10-24","home":"South Carolina","homePts":null,"away":"Tennessee","awayPts":null},{"week":8,"date":"2026-10-24","home":"Texas","homePts":null,"away":"Ole Miss","awayPts":null},{"week":8,"date":"2026-10-24","home":"UCF","homePts":null,"away":"BYU","awayPts":null},{"week":8,"date":"2026-10-24","home":"Utah","homePts":null,"away":"Houston","awayPts":null},{"week":8,"date":"2026-10-24","home":"Arizona State","homePts":null,"away":"Kansas State","awayPts":null},{"week":8,"date":"2026-10-24","home":"Cincinnati","homePts":null,"away":"Texas Tech","awayPts":null},{"week":8,"date":"2026-10-24","home":"TCU","homePts":null,"away":"West Virginia","awayPts":null},{"week":8,"date":"2026-10-24","home":"Georgia Tech","homePts":null,"away":"Boston College","awayPts":null},{"week":8,"date":"2026-10-24","home":"Miami","homePts":null,"away":"Pittsburgh","awayPts":null},{"week":8,"date":"2026-10-24","home":"Clemson","homePts":null,"away":"Virginia Tech","awayPts":null},{"week":8,"date":"2026-10-24","home":"Illinois","homePts":null,"away":"Oregon","awayPts":null},{"week":8,"date":"2026-10-24","home":"Michigan","homePts":null,"away":"Indiana","awayPts":null},{"week":8,"date":"2026-10-24","home":"Minnesota","homePts":null,"away":"Iowa","awayPts":null},{"week":8,"date":"2026-10-24","home":"UCLA","homePts":null,"away":"Michigan State","awayPts":null},{"week":8,"date":"2026-10-24","home":"Wisconsin","homePts":null,"away":"USC","awayPts":null},{"week":8,"date":"2026-10-24","home":"Toledo","homePts":null,"away":"Western Michigan","awayPts":null},{"week":8,"date":"2026-10-24","home":"Auburn","homePts":null,"away":"LSU","awayPts":null},{"week":8,"date":"2026-10-24","home":"Navy","homePts":null,"away":"North Texas","awayPts":null},{"week":8,"date":"2026-10-24","home":"Washington State","homePts":null,"away":"Boise State","awayPts":null},{"week":8,"date":"2026-10-25","home":"New Mexico","homePts":null,"away":"North Dakota State","awayPts":null},{"week":9,"date":"2026-10-29","home":"James Madison","homePts":null,"away":"Troy","awayPts":null},{"week":9,"date":"2026-10-31","home":"Louisville","homePts":null,"away":"Stanford","awayPts":null},{"week":9,"date":"2026-10-31","home":"Syracuse","homePts":null,"away":"SMU","awayPts":null},{"week":9,"date":"2026-10-31","home":"North Carolina","homePts":null,"away":"Miami","awayPts":null},{"week":9,"date":"2026-10-31","home":"Oklahoma","homePts":null,"away":"South Carolina","awayPts":null},{"week":9,"date":"2026-10-31","home":"Memphis","homePts":null,"away":"Army","awayPts":null},{"week":9,"date":"2026-10-31","home":"Ole Miss","homePts":null,"away":"Auburn","awayPts":null},{"week":9,"date":"2026-10-31","home":"Nebraska","homePts":null,"away":"Washington","awayPts":null},{"week":9,"date":"2026-10-31","home":"Oregon","homePts":null,"away":"Northwestern","awayPts":null},{"week":9,"date":"2026-10-31","home":"Penn State","homePts":null,"away":"Purdue","awayPts":null},{"week":9,"date":"2026-10-31","home":"Rutgers","homePts":null,"away":"Michigan","awayPts":null},{"week":9,"date":"2026-10-31","home":"UCLA","homePts":null,"away":"Nevada","awayPts":null},{"week":9,"date":"2026-10-31","home":"USC","homePts":null,"away":"Ohio State","awayPts":null},{"week":9,"date":"2026-10-31","home":"Indiana","homePts":null,"away":"Minnesota","awayPts":null},{"week":9,"date":"2026-10-31","home":"Iowa","homePts":null,"away":"Wisconsin","awayPts":null},{"week":9,"date":"2026-10-31","home":"Maryland","homePts":null,"away":"Illinois","awayPts":null},{"week":9,"date":"2026-10-31","home":"Arkansas","homePts":null,"away":"Missouri","awayPts":null},{"week":9,"date":"2026-10-31","home":"Pittsburgh","homePts":null,"away":"Georgia Tech","awayPts":null},{"week":9,"date":"2026-10-31","home":"Florida State","homePts":null,"away":"Clemson","awayPts":null},{"week":9,"date":"2026-10-31","home":"Cincinnati","homePts":null,"away":"Utah","awayPts":null},{"week":9,"date":"2026-10-31","home":"Colorado","homePts":null,"away":"Kansas State","awayPts":null},{"week":9,"date":"2026-10-31","home":"TCU","homePts":null,"away":"Kansas","awayPts":null},{"week":9,"date":"2026-10-31","home":"BYU","homePts":null,"away":"Arizona State","awayPts":null},{"week":9,"date":"2026-10-31","home":"Texas Tech","homePts":null,"away":"Arizona","awayPts":null},{"week":9,"date":"2026-10-31","home":"Texas","homePts":null,"away":"Mississippi State","awayPts":null},{"week":9,"date":"2026-10-31","home":"Western Michigan","homePts":null,"away":"Bowling Green","awayPts":null},{"week":9,"date":"2026-10-31","home":"Navy","homePts":null,"away":"Notre Dame","awayPts":null},{"week":9,"date":"2026-10-31","home":"North Dakota State","homePts":null,"away":"UTEP","awayPts":null},{"week":9,"date":"2026-10-31","home":"Georgia","homePts":null,"away":"Florida","awayPts":null},{"week":9,"date":"2026-11-01","home":"Boise State","homePts":null,"away":"Texas State","awayPts":null},{"week":9,"date":"2026-11-01","home":"UNLV","homePts":null,"away":"Northern Illinois","awayPts":null},{"week":10,"date":"2026-11-04","home":"Sacramento State","homePts":null,"away":"Toledo","awayPts":null},{"week":10,"date":"2026-11-06","home":"Southern Miss","homePts":null,"away":"James Madison","awayPts":null},{"week":10,"date":"2026-11-07","home":"SMU","homePts":null,"away":"Virginia Tech","awayPts":null},{"week":10,"date":"2026-11-07","home":"Illinois","homePts":null,"away":"Nebraska","awayPts":null},{"week":10,"date":"2026-11-07","home":"Arizona","homePts":null,"away":"TCU","awayPts":null},{"week":10,"date":"2026-11-07","home":"Kansas State","homePts":null,"away":"Oklahoma State","awayPts":null},{"week":10,"date":"2026-11-07","home":"Texas Tech","homePts":null,"away":"West Virginia","awayPts":null},{"week":10,"date":"2026-11-07","home":"Boston College","homePts":null,"away":"Florida State","awayPts":null},{"week":10,"date":"2026-11-07","home":"Wisconsin","homePts":null,"away":"Rutgers","awayPts":null},{"week":10,"date":"2026-11-07","home":"Washington","homePts":null,"away":"Penn State","awayPts":null},{"week":10,"date":"2026-11-07","home":"Ohio State","homePts":null,"away":"Oregon","awayPts":null},{"week":10,"date":"2026-11-07","home":"Northwestern","homePts":null,"away":"Iowa","awayPts":null},{"week":10,"date":"2026-11-07","home":"Minnesota","homePts":null,"away":"UCLA","awayPts":null},{"week":10,"date":"2026-11-07","home":"Michigan","homePts":null,"away":"Michigan State","awayPts":null},{"week":10,"date":"2026-11-07","home":"Syracuse","homePts":null,"away":"Clemson","awayPts":null},{"week":10,"date":"2026-11-07","home":"Georgia Tech","homePts":null,"away":"Louisville","awayPts":null},{"week":10,"date":"2026-11-07","home":"Auburn","homePts":null,"away":"Arkansas","awayPts":null},{"week":10,"date":"2026-11-07","home":"Florida","homePts":null,"away":"Oklahoma","awayPts":null},{"week":10,"date":"2026-11-07","home":"LSU","homePts":null,"away":"Alabama","awayPts":null},{"week":10,"date":"2026-11-07","home":"Ole Miss","homePts":null,"away":"Georgia","awayPts":null},{"week":10,"date":"2026-11-07","home":"Mississippi State","homePts":null,"away":"Vanderbilt","awayPts":null},{"week":10,"date":"2026-11-07","home":"Missouri","homePts":null,"away":"Texas","awayPts":null},{"week":10,"date":"2026-11-07","home":"South Carolina","homePts":null,"away":"Texas A&M","awayPts":null},{"week":10,"date":"2026-11-07","home":"Tennessee","homePts":null,"away":"Kentucky","awayPts":null},{"week":10,"date":"2026-11-07","home":"Utah","homePts":null,"away":"BYU","awayPts":null},{"week":10,"date":"2026-11-07","home":"Houston","homePts":null,"away":"Cincinnati","awayPts":null},{"week":10,"date":"2026-11-07","home":"Navy","homePts":null,"away":"Temple","awayPts":null},{"week":10,"date":"2026-11-07","home":"Colorado State","homePts":null,"away":"Boise State","awayPts":null},{"week":10,"date":"2026-11-08","home":"Notre Dame","homePts":null,"away":"Miami","awayPts":null},{"week":10,"date":"2026-11-08","home":"UNLV","homePts":null,"away":"Wyoming","awayPts":null},{"week":11,"date":"2026-11-11","home":"Akron","homePts":null,"away":"Western Michigan","awayPts":null},{"week":11,"date":"2026-11-11","home":"Toledo","homePts":null,"away":"Massachusetts","awayPts":null},{"week":11,"date":"2026-11-13","home":"South Florida","homePts":null,"away":"Memphis","awayPts":null},{"week":11,"date":"2026-11-14","home":"Pittsburgh","homePts":null,"away":"Florida State","awayPts":null},{"week":11,"date":"2026-11-14","home":"UCLA","homePts":null,"away":"Illinois","awayPts":null},{"week":11,"date":"2026-11-14","home":"Colorado","homePts":null,"away":"Houston","awayPts":null},{"week":11,"date":"2026-11-14","home":"BYU","homePts":null,"away":"Baylor","awayPts":null},{"week":11,"date":"2026-11-14","home":"TCU","homePts":null,"away":"Kansas State","awayPts":null},{"week":11,"date":"2026-11-14","home":"Oklahoma State","homePts":null,"away":"Texas Tech","awayPts":null},{"week":11,"date":"2026-11-14","home":"Arizona","homePts":null,"away":"Utah","awayPts":null},{"week":11,"date":"2026-11-14","home":"Arkansas","homePts":null,"away":"South Carolina","awayPts":null},{"week":11,"date":"2026-11-14","home":"LSU","homePts":null,"away":"Texas","awayPts":null},{"week":11,"date":"2026-11-14","home":"Mississippi State","homePts":null,"away":"Auburn","awayPts":null},{"week":11,"date":"2026-11-14","home":"Oklahoma","homePts":null,"away":"Ole Miss","awayPts":null},{"week":11,"date":"2026-11-14","home":"Texas A&M","homePts":null,"away":"Tennessee","awayPts":null},{"week":11,"date":"2026-11-14","home":"Georgia","homePts":null,"away":"Missouri","awayPts":null},{"week":11,"date":"2026-11-14","home":"Rutgers","homePts":null,"away":"Nebraska","awayPts":null},{"week":11,"date":"2026-11-14","home":"Penn State","homePts":null,"away":"Minnesota","awayPts":null},{"week":11,"date":"2026-11-14","home":"Oregon","homePts":null,"away":"Michigan","awayPts":null},{"week":11,"date":"2026-11-14","home":"Ohio State","homePts":null,"away":"Northwestern","awayPts":null},{"week":11,"date":"2026-11-14","home":"Michigan State","homePts":null,"away":"Washington","awayPts":null},{"week":11,"date":"2026-11-14","home":"Maryland","homePts":null,"away":"Wisconsin","awayPts":null},{"week":11,"date":"2026-11-14","home":"Iowa","homePts":null,"away":"Purdue","awayPts":null},{"week":11,"date":"2026-11-14","home":"Indiana","homePts":null,"away":"USC","awayPts":null},{"week":11,"date":"2026-11-14","home":"SMU","homePts":null,"away":"Wake Forest","awayPts":null},{"week":11,"date":"2026-11-14","home":"Virginia Tech","homePts":null,"away":"Stanford","awayPts":null},{"week":11,"date":"2026-11-14","home":"North Carolina","homePts":null,"away":"Louisville","awayPts":null},{"week":11,"date":"2026-11-14","home":"Clemson","homePts":null,"away":"Georgia Tech","awayPts":null},{"week":11,"date":"2026-11-14","home":"Miami","homePts":null,"away":"Duke","awayPts":null},{"week":11,"date":"2026-11-14","home":"Kentucky","homePts":null,"away":"Florida","awayPts":null},{"week":11,"date":"2026-11-14","home":"Vanderbilt","homePts":null,"away":"Alabama","awayPts":null},{"week":11,"date":"2026-11-14","home":"UConn","homePts":null,"away":"James Madison","awayPts":null},{"week":11,"date":"2026-11-14","home":"Notre Dame","homePts":null,"away":"Boston College","awayPts":null},{"week":11,"date":"2026-11-14","home":"Boise State","homePts":null,"away":"Oregon State","awayPts":null},{"week":11,"date":"2026-11-15","home":"New Mexico","homePts":null,"away":"UNLV","awayPts":null},{"week":11,"date":"2026-11-15","home":"Hawai'i","homePts":null,"away":"North Dakota State","awayPts":null},{"week":12,"date":"2026-11-18","home":"Western Michigan","homePts":null,"away":"Eastern Michigan","awayPts":null},{"week":12,"date":"2026-11-21","home":"Toledo","homePts":null,"away":"Bowling Green","awayPts":null},{"week":12,"date":"2026-11-21","home":"Duke","homePts":null,"away":"Clemson","awayPts":null},{"week":12,"date":"2026-11-21","home":"Michigan State","homePts":null,"away":"Oregon","awayPts":null},{"week":12,"date":"2026-11-21","home":"Miami","homePts":null,"away":"Virginia Tech","awayPts":null},{"week":12,"date":"2026-11-21","home":"Washington","homePts":null,"away":"Indiana","awayPts":null},{"week":12,"date":"2026-11-21","home":"USC","homePts":null,"away":"Maryland","awayPts":null},{"week":12,"date":"2026-11-21","home":"Purdue","homePts":null,"away":"Wisconsin","awayPts":null},{"week":12,"date":"2026-11-21","home":"Penn State","homePts":null,"away":"Rutgers","awayPts":null},{"week":12,"date":"2026-11-21","home":"Nebraska","homePts":null,"away":"Ohio State","awayPts":null},{"week":12,"date":"2026-11-21","home":"Michigan","homePts":null,"away":"UCLA","awayPts":null},{"week":12,"date":"2026-11-21","home":"Illinois","homePts":null,"away":"Iowa","awayPts":null},{"week":12,"date":"2026-11-21","home":"Georgia Tech","homePts":null,"away":"Wake Forest","awayPts":null},{"week":12,"date":"2026-11-21","home":"Louisville","homePts":null,"away":"Pittsburgh","awayPts":null},{"week":12,"date":"2026-11-21","home":"Florida State","homePts":null,"away":"NC State","awayPts":null},{"week":12,"date":"2026-11-21","home":"TCU","homePts":null,"away":"Utah","awayPts":null},{"week":12,"date":"2026-11-21","home":"Baylor","homePts":null,"away":"Texas Tech","awayPts":null},{"week":12,"date":"2026-11-21","home":"West Virginia","homePts":null,"away":"Houston","awayPts":null},{"week":12,"date":"2026-11-21","home":"Kansas","homePts":null,"away":"BYU","awayPts":null},{"week":12,"date":"2026-11-21","home":"Kansas State","homePts":null,"away":"Arizona","awayPts":null},{"week":12,"date":"2026-11-21","home":"Texas","homePts":null,"away":"Arkansas","awayPts":null},{"week":12,"date":"2026-11-21","home":"Tennessee","homePts":null,"away":"LSU","awayPts":null},{"week":12,"date":"2026-11-21","home":"South Carolina","homePts":null,"away":"Georgia","awayPts":null},{"week":12,"date":"2026-11-21","home":"Oklahoma","homePts":null,"away":"Texas A&M","awayPts":null},{"week":12,"date":"2026-11-21","home":"Missouri","homePts":null,"away":"Kentucky","awayPts":null},{"week":12,"date":"2026-11-21","home":"Florida","homePts":null,"away":"Vanderbilt","awayPts":null},{"week":12,"date":"2026-11-21","home":"Ole Miss","homePts":null,"away":"Wofford","awayPts":null},{"week":12,"date":"2026-11-21","home":"Navy","homePts":null,"away":"Memphis","awayPts":null},{"week":12,"date":"2026-11-21","home":"Alabama","homePts":null,"away":"Chattanooga","awayPts":null},{"week":12,"date":"2026-11-21","home":"Auburn","homePts":null,"away":"Samford","awayPts":null},{"week":12,"date":"2026-11-21","home":"North Dakota State","homePts":null,"away":"Northern Illinois","awayPts":null},{"week":12,"date":"2026-11-22","home":"San Jos\u00e9 State","homePts":null,"away":"UNLV","awayPts":null},{"week":12,"date":"2026-11-22","home":"Notre Dame","homePts":null,"away":"SMU","awayPts":null},{"week":12,"date":"2026-11-22","home":"Boise State","homePts":null,"away":"San Diego State","awayPts":null},{"week":13,"date":"2026-11-24","home":"Western Michigan","homePts":null,"away":"Miami (OH)","awayPts":null},{"week":13,"date":"2026-11-27","home":"Texas Tech","homePts":null,"away":"TCU","awayPts":null},{"week":13,"date":"2026-11-27","home":"Memphis","homePts":null,"away":"Temple","awayPts":null},{"week":13,"date":"2026-11-27","home":"Iowa","homePts":null,"away":"Nebraska","awayPts":null},{"week":13,"date":"2026-11-27","home":"Ohio","homePts":null,"away":"Toledo","awayPts":null},{"week":13,"date":"2026-11-27","home":"Ole Miss","homePts":null,"away":"Mississippi State","awayPts":null},{"week":13,"date":"2026-11-27","home":"San Jos\u00e9 State","homePts":null,"away":"North Dakota State","awayPts":null},{"week":13,"date":"2026-11-27","home":"Florida State","homePts":null,"away":"Florida","awayPts":null},{"week":13,"date":"2026-11-28","home":"Texas A&M","homePts":null,"away":"Texas","awayPts":null},{"week":13,"date":"2026-11-28","home":"Wisconsin","homePts":null,"away":"Minnesota","awayPts":null},{"week":13,"date":"2026-11-28","home":"Utah","homePts":null,"away":"West Virginia","awayPts":null},{"week":13,"date":"2026-11-28","home":"Northwestern","homePts":null,"away":"Illinois","awayPts":null},{"week":13,"date":"2026-11-28","home":"Oregon","homePts":null,"away":"Washington","awayPts":null},{"week":13,"date":"2026-11-28","home":"Syracuse","homePts":null,"away":"Notre Dame","awayPts":null},{"week":13,"date":"2026-11-28","home":"California","homePts":null,"away":"Pittsburgh","awayPts":null},{"week":13,"date":"2026-11-28","home":"Stanford","homePts":null,"away":"SMU","awayPts":null},{"week":13,"date":"2026-11-28","home":"Virginia Tech","homePts":null,"away":"Virginia","awayPts":null},{"week":13,"date":"2026-11-28","home":"Indiana","homePts":null,"away":"Purdue","awayPts":null},{"week":13,"date":"2026-11-28","home":"Maryland","homePts":null,"away":"Penn State","awayPts":null},{"week":13,"date":"2026-11-28","home":"Charlotte","homePts":null,"away":"Navy","awayPts":null},{"week":13,"date":"2026-11-28","home":"UCLA","homePts":null,"away":"USC","awayPts":null},{"week":13,"date":"2026-11-28","home":"James Madison","homePts":null,"away":"Coastal Carolina","awayPts":null},{"week":13,"date":"2026-11-28","home":"Alabama","homePts":null,"away":"Auburn","awayPts":null},{"week":13,"date":"2026-11-28","home":"Arkansas","homePts":null,"away":"LSU","awayPts":null},{"week":13,"date":"2026-11-28","home":"Georgia","homePts":null,"away":"Georgia Tech","awayPts":null},{"week":13,"date":"2026-11-28","home":"Kentucky","homePts":null,"away":"Louisville","awayPts":null},{"week":13,"date":"2026-11-28","home":"Missouri","homePts":null,"away":"Oklahoma","awayPts":null},{"week":13,"date":"2026-11-28","home":"Clemson","homePts":null,"away":"South Carolina","awayPts":null},{"week":13,"date":"2026-11-28","home":"Vanderbilt","homePts":null,"away":"Tennessee","awayPts":null},{"week":13,"date":"2026-11-28","home":"Houston","homePts":null,"away":"Baylor","awayPts":null},{"week":13,"date":"2026-11-28","home":"BYU","homePts":null,"away":"Cincinnati","awayPts":null},{"week":13,"date":"2026-11-28","home":"Iowa State","homePts":null,"away":"Kansas State","awayPts":null},{"week":13,"date":"2026-11-28","home":"Miami","homePts":null,"away":"Boston College","awayPts":null},{"week":13,"date":"2026-11-28","home":"Ohio State","homePts":null,"away":"Michigan","awayPts":null},{"week":13,"date":"2026-11-29","home":"UNLV","homePts":null,"away":"Nevada","awayPts":null},{"week":15,"date":"2026-12-12","home":"Army","homePts":null,"away":"Navy","awayPts":null}],"colors":{"Air Force":["003594","FFFFFF"],"Akron":["041E42","A89968"],"Alabama":["9E1B32","FFFFFF"],"App State":["000000","FFCD00"],"Arizona":["CC0033","FFFFFF"],"Arizona State":["FFC627","8C1D40"],"Arkansas":["A32136","FFFFFF"],"Arkansas State":["CC092F","FFFFFF"],"Army":["000000","D3BC8D"],"Auburn":["0C2340","F26522"],"BYU":["003DA5","FFFFFF"],"Ball State":["BA0C2F","FFFFFF"],"Baylor":["154734","FFB81C"],"Boise State":["0033A0","FFFFFF"],"Boston College":["8C2232","DBCCA6"],"Bowling Green":["FD5000","4F2C1D"],"Buffalo":["005BBB","FFFFFF"],"California":["041E42","FFC72C"],"Central Michigan":["6A0032","FFC82E"],"Charlotte":["005035","A49665"],"Cincinnati":["000000","E00122"],"Clemson":["F56600","FFFFFF"],"Coastal Carolina":["006F71","FFFFFF"],"Colorado":["CFB87C","000000"],"Colorado State":["1E4D2B","C8C372"],"Delaware":["00539F","FFD200"],"Duke":["00539B","FFFFFF"],"East Carolina":["592A8A","FDC82F"],"Eastern Michigan":["046A38","FFFFFF"],"Florida":["0021A5","FA4616"],"Florida Atlantic":["003366","FFFFFF"],"Florida International":["091F3F","C3993F"],"Florida State":["782F40","CEB888"],"Fresno State":["C41230","FFFFFF"],"Georgia":["BA0C2F","FFFFFF"],"Georgia Southern":["041E42","FFFFFF"],"Georgia State":["0039A6","FFFFFF"],"Georgia Tech":["B3A369","000000"],"Hawai'i":["024731","FFFFFF"],"Houston":["C8102E","FFFFFF"],"Illinois":["FF5F05","13294B"],"Indiana":["990000","FFFFFF"],"Iowa":["000000","FFCD00"],"Iowa State":["C8102E","F1BE48"],"Jacksonville State":["CC0000","FFFFFF"],"James Madison":["450084","CBB677"],"Kansas":["0051BA","FFFFFF"],"Kansas State":["512888","FFFFFF"],"Kennesaw State":["FDBB30","0B1315"],"Kent State":["002664","EAAB00"],"Kentucky":["0033A0","FFFFFF"],"LSU":["461D7C","FDD023"],"Liberty":["0A254E","FFFFFF"],"Louisiana":["CE181E","FFFFFF"],"Louisiana Tech":["003087","FFFFFF"],"Louisville":["C9001F","FFFFFF"],"Marshall":["00B140","000000"],"Maryland":["CE1126","FFFFFF"],"Memphis":["00498F","9C9EA1"],"Miami":["F47321","005030"],"Miami (OH)":["C41230","FFFFFF"],"Michigan":["00274C","FFCB05"],"Michigan State":["173F35","FFFFFF"],"Middle Tennessee":["036EB7","FFFFFF"],"Minnesota":["7A0019","FFCC33"],"Mississippi State":["5D1725","C1C6C8"],"Missouri":["F1B82D","000000"],"Missouri State":["5E0009","FFFFFF"],"NC State":["CC0000","FFFFFF"],"Navy":["00225B","B5A67C"],"Nebraska":["D00000","FFFFFF"],"Nevada":["041E42","8A8D8F"],"New Mexico":["BA0C2F","A7A8AA"],"New Mexico State":["8C0B42","FFFFFF"],"North Carolina":["7BAFD4","13294B"],"North Texas":["00853E","FFFFFF"],"Northern Illinois":["C8102E","FFFFFF"],"Northwestern":["582C83","FFFFFF"],"Notre Dame":["0C2340","C99700"],"Ohio":["024230","FFFFFF"],"Ohio State":["BA0C2F","A7B1B7"],"Oklahoma":["841617","FFFFFF"],"Oklahoma State":["FE5C00","000000"],"Old Dominion":["043657","98C5EA"],"Ole Miss":["13294B","FFFFFF"],"Oregon":["007030","FEE11A"],"Oregon State":["DC4405","FFFFFF"],"Penn State":["001E44","FFFFFF"],"Pittsburgh":["003594","FFB81C"],"Purdue":["CEB888","000000"],"Rice":["00205B","C1C6C8"],"Rutgers":["CE0E2D","FFFFFF"],"SMU":["D70000","FFFFFF"],"Sacramento State":["00573C","CDB97D"],"Sam Houston":["F56423","FFFFFF"],"San Diego State":["A6192E","FFFFFF"],"San Jos\u00e9 State":["0055A2","E5A823"],"South Alabama":["00205B","BF0D3E"],"South Carolina":["73000A","FFFFFF"],"South Florida":["006747","CFC493"],"Southern Miss":["FFC72C","231F20"],"Stanford":["8C1515","FFFFFF"],"Syracuse":["F76900","000E54"],"TCU":["4D1979","FFFFFF"],"Temple":["A41E35","FFFFFF"],"Tennessee":["FF8200","000000"],"Texas":["BF5700","FFFFFF"],"Texas A&M":["500000","FFFFFF"],"Texas State":["501214","6A5638"],"Texas Tech":["C30020","FFFFFF"],"Toledo":["0B2240","FFCD00"],"Troy":["862633","B1B1B1"],"Tulane":["006747","FFFFFF"],"Tulsa":["003595","D0B787"],"UAB":["1A5632","FDB913"],"UCF":["000000","B4A169"],"UCLA":["2774AE","FFFFFF"],"UConn":["000E2F","FFFFFF"],"UL Monroe":["840029","FDB913"],"UMass":["881C1C","FFFFFF"],"UNLV":["CF0A2C","CAC8C8"],"USC":["990000","FFCC00"],"UTEP":["FF8200","041E42"],"UTSA":["0C2340","F15A22"],"Utah":["BE0000","FFFFFF"],"Utah State":["0F2439","FFFFFF"],"Vanderbilt":["000000","CFAE70"],"Virginia":["232D4B","F84C1E"],"Virginia Tech":["861F41","FFFFFF"],"Wake Forest":["CEB888","2C2A29"],"Washington":["33006F","E8D3A2"],"Washington State":["A60F2D","FFFFFF"],"West Virginia":["EAAA00","002855"],"Western Kentucky":["C60C30","FFFFFF"],"Western Michigan":["532E1F","F1C500"],"Wisconsin":["A00000","FFFFFF"],"Wyoming":["492F24","FFC425"],"North Dakota State":["00583D","FFC425"]},"escrow":150,"prizePool":150,"generated":"2026-08-24"};
+</script>
+<script>
+/* ============ helpers ============ */
+const $ = (s,r=document)=>r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const col = t => D.colors[t] || ["1B2A41","FFFFFF"];
+const money = n => '$' + n.toLocaleString();
+
+/* ownership as of a date (points don't travel) */
+function ownerAt(team, date){
+  for(const s of D.stints){
+    if(s.team!==team) continue;
+    if(s.start && date < s.start) continue;
+    if(s.end && date > s.end) continue;
+    return s.owner;
+  }
+  return null;
+}
+function currentRoster(o){
+  return D.stints.filter(s=>s.owner===o && !s.end).map(s=>s.team).sort();
+}
+const rostered = new Set(D.stints.filter(s=>!s.end).map(s=>s.team));
+
+/* played games only */
+const played = D.games.filter(g=>g.homePts!=null && g.awayPts!=null);
+const hasResults = played.length>0;
+const weeks = [...new Set(D.games.map(g=>g.week))].sort((a,b)=>a-b);
+
+function winnerOf(g){
+  if(g.homePts==null||g.awayPts==null) return null;
+  if(g.homePts>g.awayPts) return g.home;
+  if(g.awayPts>g.homePts) return g.away;
+  return null;
+}
+/* is this a head-to-head (different owners on game day)? */
+function h2h(g){
+  const a=ownerAt(g.home,g.date), b=ownerAt(g.away,g.date);
+  return (a&&b&&a!==b) ? [a,b] : null;
+}
+
+/* points: 1 per regular-season win, credited to game-day owner */
+function pointsByOwner(){
+  const p={}; D.owners.forEach(o=>p[o]=0);
+  for(const g of played){
+    const w=winnerOf(g); if(!w) continue;
+    const o=ownerAt(w,g.date);
+    if(o) p[o]+=1;
+  }
+  return p;
+}
+function weeklyPoints(o,wk){
+  let n=0;
+  for(const g of played){
+    if(g.week!==wk) continue;
+    const w=winnerOf(g); if(!w) continue;
+    if(ownerAt(w,g.date)===o) n++;
+  }
+  return n;
+}
+/* money won: $1 per H2H win */
+function moneyByOwner(){
+  const m={}; D.owners.forEach(o=>m[o]=0);
+  for(const g of played){
+    if(!h2h(g)) continue;
+    const w=winnerOf(g); if(!w) continue;
+    const o=ownerAt(w,g.date);
+    if(o) m[o]+=1;
+  }
+  return m;
+}
+function teamRecord(t){
+  let w=0,l=0;
+  for(const g of played){
+    if(g.home!==t && g.away!==t) continue;
+    const win=winnerOf(g);
+    if(!win){continue}
+    if(win===t) w++; else l++;
+  }
+  return w+'-'+l;
+}
+/* standings with tiebreak: pts, then reverse draft slot (later pick wins) */
+function standings(){
+  const p=pointsByOwner();
+  return D.owners.slice().sort((a,b)=>
+    (p[b]-p[a]) || ((D.draftSlot[b]||0)-(D.draftSlot[a]||0))
+  ).map((o,i)=>({o,pts:p[o],rank:i+1}));
+}
+/* transactions derived from ledger */
+function moves(){
+  return D.stints
+    .filter(s=>s.via && s.via!=='Draft')
+    .sort((a,b)=> (b.start||'').localeCompare(a.start||''))
+    .map(s=>{
+      // who lost it? the stint on same team ending just before
+      const prev = D.stints.find(x=>x.team===s.team && x.end && x.end < s.start);
+      return {team:s.team,to:s.owner,from:prev?prev.owner:null,date:s.start,via:s.via};
+    });
+}
+
+function chip(t,{rec=false}={}){
+  const [p,a]=col(t);
+  return `<span class="chip" style="background:#${p};color:#${a}">${esc(t)}${rec?`<span class="rec">${teamRecord(t)}</span>`:''}</span>`;
+}
+
+/* ============ views ============ */
+const V = {};
+
+V.standings = ()=>{
+  const s=standings(), max=Math.max(1,...s.map(x=>x.pts));
+  const body = s.map(r=>`
+    <tr class="${r.rank===1&&hasResults?'lead':''}">
+      <td class="rank">${r.rank}</td>
+      <td>
+        <div class="who">${esc(r.o)}</div>
+        <div class="bar"><i style="width:${hasResults?(r.pts/max*100):0}%"></i></div>
+      </td>
+      <td class="pts">${r.pts}</td>
+    </tr>`).join('');
+  return `
+  <div class="phead"><h1>Standings</h1>
+    <p>One point per regular-season win. Points stay with the owner who held the team that week.</p></div>
+  <div class="card">
+    <table>
+      <thead><tr><th style="width:34px">#</th><th>Squad</th><th style="text-align:right">Pts</th></tr></thead>
+      <tbody>${body}</tbody>
+    </table>
+    ${hasResults?'':`<div class="empty" style="border-top:1px solid var(--line)">
+      <div class="big">No games played yet</div>
+      <p>Standings fill in automatically once results are posted. Ties break by draft slot — the later first-round pick wins.</p>
+    </div>`}
+  </div>`;
+};
+
+V.weeks = (wk)=>{
+  const cur = wk ?? (hasResults ? Math.max(...played.map(g=>g.week)) : weeks[0]);
+  const bar = weeks.map(w=>`<button class="${w===cur?'on':''}" onclick="go('weeks',${w})">Wk ${w}</button>`).join('');
+  const blocks = D.owners.map(o=>{
+    const roster=new Set(currentRoster(o));
+    const gs = D.games.filter(g=>g.week===cur && (
+      ownerAt(g.home,g.date)===o || ownerAt(g.away,g.date)===o));
+    const pts = weeklyPoints(o,cur);
+    const rows = gs.length? gs.map(g=>{
+      const mine = ownerAt(g.home,g.date)===o ? g.home : g.away;
+      const opp  = mine===g.home ? g.away : g.home;
+      const win=winnerOf(g);
+      const st = win==null ? 'p' : (win===mine?'w':'l');
+      const mark = win==null ? '–' : (win===mine?'W':'L');
+      const sc = (g.homePts!=null)? `${g.homePts}–${g.awayPts}` : '';
+      const isH = h2h(g);
+      const oppOwner = ownerAt(opp,g.date);
+      return `<div class="g">
+        <div class="res ${st}">${mark}</div>
+        <div class="mt">${chip(mine)}
+          <div class="vs">vs ${esc(opp)}${isH&&oppOwner?` <span class="badge">$1 vs ${esc(oppOwner)}</span>`:''}</div>
+        </div>
+        <div class="sc">${sc}</div>
+        <div class="pt">${win===mine?'+1':''}</div>
+      </div>`;
+    }).join('') : `<div class="empty"><p>No games this week.</p></div>`;
+    return `<div class="ownerblock">
+      <div class="oh"><div class="nm">${esc(o)}</div><div class="wk">Week ${cur} &nbsp;<b>+${pts}</b></div></div>
+      <div class="games">${rows}</div>
+    </div>`;
+  }).join('');
+  return `
+  <div class="phead"><h1>Week ${cur}</h1>
+    <p>Every game your teams play, and exactly where each point came from.</p></div>
+  <div class="weekbar">${bar}</div>
+  ${blocks}`;
+};
+
+V.rosters = ()=>{
+  const p=pointsByOwner();
+  const cards = D.owners.map(o=>{
+    const teams=currentRoster(o);
+    const tiles = teams.map(t=>{
+      const [pc,ac]=col(t);
+      const cf=(D.teams[t]&&D.teams[t].conf)||'';
+      return `<div class="tile" style="background:#${pc};color:#${ac}">
+        <span>${esc(t)}</span>
+        <span style="display:flex;gap:9px;align-items:center">
+          <span class="cf">${esc(cf)}</span>
+          <span class="rec">${teamRecord(t)}</span>
+        </span>
+      </div>`;
+    }).join('');
+    return `<div class="card squad">
+      <div class="card-h"><h2>${esc(o)}</h2><div class="tot">${p[o]} pt${p[o]===1?'':'s'}</div></div>
+      <div class="tiles">${tiles}</div>
+    </div>`;
+  }).join('');
+  return `<div class="phead"><h1>Squads</h1>
+    <p>Eight teams each. Records update as results are posted.</p></div>
+    <div class="squads">${cards}</div>`;
+};
+
+V.money = ()=>{
+  const m=moneyByOwner();
+  const total=Object.values(m).reduce((a,b)=>a+b,0);
+  const left=D.escrow-total;
+  const board = D.owners.slice().sort((a,b)=>m[b]-m[a]).map((o,i)=>`
+    <tr class="${i===0&&total>0?'lead':''}">
+      <td class="rank">${i+1}</td>
+      <td class="who">${esc(o)}</td>
+      <td class="pts">${money(m[o])}</td>
+    </tr>`).join('');
+
+  /* cumulative chart */
+  const series = D.owners.map(o=>{
+    let run=0;
+    return {o, pts: weeks.map(w=>{
+      for(const g of played){
+        if(g.week!==w) continue;
+        if(!h2h(g)) continue;
+        const win=winnerOf(g); if(!win) continue;
+        if(ownerAt(win,g.date)===o) run++;
+      }
+      return run;
+    })};
+  });
+  const maxY=Math.max(1,...series.flatMap(s=>s.pts));
+  const W=560,H=180,PX=26,PY=12;
+  const x=i=>PX+ i*(W-PX-8)/Math.max(1,weeks.length-1);
+  const y=v=>H-PY- v*(H-PY*2)/maxY;
+  const palette=['#1B2A41','#C8A24A','#1B7F4B','#B3261E','#5B3C8A','#1B4E8A'];
+  const lines = series.map((s,i)=>{
+    const d=s.pts.map((v,j)=>`${j?'L':'M'}${x(j).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    return `<path d="${d}" fill="none" stroke="${palette[i]}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }).join('');
+  const grid=[0,.5,1].map(f=>{
+    const v=Math.round(maxY*f);
+    return `<line x1="${PX}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="#E6EAEF" stroke-width="1"/>
+            <text x="0" y="${y(v)+4}" font-size="10" fill="#8A939C" font-family="Roboto Mono,monospace">$${v}</text>`;
+  }).join('');
+  const legend = series.map((s,i)=>`<span><i style="background:${palette[i]}"></i>${esc(s.o)}</span>`).join('');
+
+  const items = played.filter(g=>h2h(g)&&winnerOf(g)).sort((a,b)=>b.date.localeCompare(a.date)).map(g=>{
+    const w=winnerOf(g), o=ownerAt(w,g.date);
+    const loser = w===g.home?g.away:g.home;
+    const lo = ownerAt(loser,g.date);
+    return `<div class="move">
+      <div class="d">Wk ${g.week}</div>
+      <div class="b"><div style="font-weight:600">${esc(o)} <span style="color:var(--muted);font-weight:400">beat</span> ${esc(lo)}</div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:3px">${chip(w)} def. ${esc(loser)} ${g.homePts}–${g.awayPts}</div></div>
+      <div style="font-family:'Barlow Condensed';font-weight:700;font-size:19px;color:var(--gold)">+$1</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="phead"><h1>Money</h1>
+    <p>A dollar rides on every regular-season game between two squads. Paid from the ${money(D.escrow)} escrow.</p></div>
+  <div class="moneygrid">
+    <div class="mstat"><div class="k">Paid out</div><div class="v">${money(total)}</div></div>
+    <div class="mstat"><div class="k">Escrow left</div><div class="v gold">${money(left)}</div></div>
+    <div class="mstat"><div class="k">Prize pool</div><div class="v">${money(D.prizePool)}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Won this season</h2></div>
+    <table><tbody>${board}</tbody></table>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Running total</h2><span class="hint">cumulative $ by week</span></div>
+    <div class="chart"><div class="chartwrap">
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Cumulative money won by week">
+        ${grid}${lines}
+      </svg>
+    </div></div>
+    <div class="legend">${legend}</div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Every dollar</h2><span class="hint">${played.filter(g=>h2h(g)&&winnerOf(g)).length} paid</span></div>
+    ${items || `<div class="empty"><div class="big">Nothing paid yet</div>
+      <p>Head-to-head wins show up here one line at a time, newest first.</p></div>`}
+  </div>`;
+};
+
+V.waivers = (conf)=>{
+  const avail = Object.keys(D.teams).filter(t=>!rostered.has(t)).sort();
+  const confs = [...new Set(avail.map(t=>D.teams[t].conf))].sort();
+  const active = conf || 'All';
+  const list = active==='All' ? avail : avail.filter(t=>D.teams[t].conf===active);
+  const btns = ['All',...confs].map(c=>
+    `<button class="${c===active?'on':''}" onclick="go('waivers','${esc(c)}')">${esc(c)}</button>`).join('');
+  const grid = list.map(t=>chip(t,{rec:hasResults})).join('');
+
+  const s=standings().slice().reverse();
+  const prio = s.map((r,i)=>`<div class="prow ${i===0?'first':''}">
+      <div class="n">${i+1}</div><div class="nm">${esc(r.o)}</div>
+      <div class="pp">${r.pts} pts</div></div>`).join('');
+
+  return `<div class="phead"><h1>Waiver wire</h1>
+    <p>${avail.length} teams unclaimed. Priority runs in reverse standings order and resets every week.</p></div>
+  <div class="card">
+    <div class="card-h"><h2>Priority this week</h2><span class="hint">fewest points picks first</span></div>
+    <div class="prio">${prio}</div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Available</h2><span class="hint">${list.length} shown</span></div>
+    <div class="filters">${btns}</div>
+    <div class="wgrid">${grid}</div>
+  </div>`;
+};
+
+V.moves = ()=>{
+  const ms=moves();
+  const rows = ms.map(m=>`
+    <div class="move">
+      <div class="d">${esc(m.date||'')}</div>
+      <div class="b">
+        <span class="kind ${m.via.toLowerCase()==='trade'?'trade':m.via.toLowerCase()==='waiver'?'waiver':'fa'}">${esc(m.via)}</span>
+        <div>${chip(m.team)}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:5px">
+          ${m.from?`${esc(m.from)} <span style="opacity:.6">&rarr;</span> `:'Claimed by '}<b style="color:var(--ink)">${esc(m.to)}</b>
+        </div>
+      </div>
+    </div>`).join('');
+  return `<div class="phead"><h1>Moves</h1>
+    <p>Every trade, waiver claim, and free-agent pickup, newest first.</p></div>
+  <div class="card">
+    <div class="card-h"><h2>Transaction log</h2><span class="hint">${ms.length} move${ms.length===1?'':'s'}</span></div>
+    ${rows || `<div class="empty"><div class="big">No moves yet</div>
+      <p>Rosters are as drafted. Trades and claims appear here the moment they're recorded in the ledger.</p></div>`}
+  </div>`;
+};
+
+/* ============ router ============ */
+const TABS=[
+  ['standings','Standings','M3 13h2v7H3v-7zm4-5h2v12H7V8zm4-5h2v17h-2V3zm4 8h2v9h-2v-9zm4-4h2v13h-2V7z'],
+  ['weeks','Weekly points','M7 2v2H4v18h16V4h-3V2h-2v2H9V2H7zm11 8v10H6V10h12z'],
+  ['rosters','Squads','M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z'],
+  ['money','Money','M12 2v2.2c2.3.2 4 1.5 4 3.3h-2.2c0-.8-.9-1.4-1.8-1.5v3.3c2.6.5 4 1.6 4 3.6 0 2-1.7 3.4-4 3.6V20h-1.5v-2.5c-2.5-.2-4.3-1.6-4.3-3.6h2.2c0 .9 1 1.6 2.1 1.7v-3.5C7.9 11.6 6.6 10.5 6.6 8.6c0-1.9 1.7-3.2 3.9-3.4V2H12z'],
+  ['waivers','Waiver wire','M3 5h18v2H3V5zm0 6h12v2H3v-2zm0 6h18v2H3v-2z'],
+  ['moves','Moves','M7 7h10l-3-3 1.4-1.4L21 8l-5.6 5.4L14 12l3-3H7V7zm10 10H7l3 3-1.4 1.4L3 16l5.6-5.4L10 12l-3 3h10v2z'],
+];
+let state={tab:'standings',arg:null};
+
+function renderNav(){
+  $('#nav').innerHTML = TABS.map(([k,label,d])=>
+    `<button class="${state.tab===k?'on':''}" onclick="go('${k}')">
+      <svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="${d}"/></svg>
+      ${label}
+    </button>`).join('');
+  const played_n = played.length;
+  $('#foot').innerHTML = `${D.owners.length} squads &middot; ${rostered.size} teams<br>`+
+    (played_n? `${played_n} games played` : `Season opens Sept 5`) +
+    `<br><span style="opacity:.7">Updated ${D.generated}</span>`;
+}
+function go(tab,arg){
+  state={tab,arg:arg??null};
+  document.body.classList.remove('menu');
+  renderNav();
+  $('#view').innerHTML = V[tab](arg);
+  window.scrollTo({top:0,behavior:'instant'});
+}
+renderNav();
+go('standings');
+</script>
+</body>
+</html>
