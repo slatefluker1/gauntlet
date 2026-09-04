@@ -1,0 +1,17 @@
+# This repo is PUBLIC and is served by GitHub Pages.
+# index.html is the only thing that belongs here. The league workbook, the API key,
+# and all local run artifacts live in the parent folder and must never be committed.
+
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+.env
+.env.*
+backups/
+snapshots/
+logs/
+*.bak
+.DS_Store
+__pycache__/
+*.pyc
