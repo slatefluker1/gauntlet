@@ -118,6 +118,12 @@ tr.lead .bar i{background:var(--gold)}
 
 /* ---------- roster wall ---------- */
 .squads{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+/* the grid's own gap already spaces cards; the sibling-margin rule above is for
+   single-column lists elsewhere and, left active here, only skips the very first
+   DOM child (regardless of which grid row it lands in) -- mismatched margins
+   within a row then make CSS Grid's default row-stretch pad that one card with
+   dead space. Zero it out for every card in this grid. */
+.squads .card{margin-top:0}
 .squad .card-h{background:var(--brand);color:#fff;border-bottom:0}
 .squad .card-h h2{font-size:18px}
 .squad .card-h .tot{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:700;color:var(--gold)}
