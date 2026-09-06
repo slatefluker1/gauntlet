@@ -8,9 +8,7 @@
 *.csv
 .env
 .env.*
-backups/
-snapshots/
-logs/
+data/
 *.bak
 .DS_Store
 __pycache__/

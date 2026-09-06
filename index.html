@@ -527,6 +527,36 @@ V.rosters = ()=>{
     <div class="squads">${cards}</div>`;
 };
 
+V.draft = ()=>{
+  const picks = D.stints.filter(s=>s.via==='Draft');
+  const draftDate = picks.length ? picks[0].start : null;
+  const heldNowBy = new Map(D.stints.filter(s=>!s.end).map(s=>[s.team, s.owner]));
+  const cards = D.owners.map(o=>{
+    const mine = picks.filter(s=>s.owner===o).map(s=>s.team).sort();
+    const tiles = mine.map(t=>{
+      const [pc,ac]=col(t);
+      const cf=(D.teams[t]&&D.teams[t].conf)||'';
+      const now = heldNowBy.get(t);
+      const moved = now && now!==o;
+      return `<div class="tile" style="background:#${pc};color:#${ac}">
+        <span>${esc(t)}</span>
+        <span style="display:flex;gap:9px;align-items:center">
+          <span class="cf">${esc(cf)}</span>
+          ${moved?`<span class="rec">now ${esc(now)}</span>`:''}
+        </span>
+      </div>`;
+    }).join('');
+    return `<div class="card squad">
+      <div class="card-h"><h2>${esc(o)}</h2><div class="tot">${mine.length}</div></div>
+      <div class="tiles">${tiles}</div>
+    </div>`;
+  }).join('');
+  return `<div class="phead"><h1>Draft</h1>
+    <p>Original picks${draftDate?`, drafted ${esc(draftDate)}`:''}. Round order wasn't recorded --
+    this is each squad's final haul. Roster moves since draft are on the Moves tab.</p></div>
+    <div class="squads">${cards}</div>`;
+};
+
 V.money = ()=>{
   const m=moneyByOwner();
   const total=Object.values(m).reduce((a,b)=>a+b,0);
@@ -660,6 +690,7 @@ const TABS=[
   ['standings','Standings','M3 13h2v7H3v-7zm4-5h2v12H7V8zm4-5h2v17h-2V3zm4 8h2v9h-2v-9zm4-4h2v13h-2V7z'],
   ['weeks','Weekly points','M7 2v2H4v18h16V4h-3V2h-2v2H9V2H7zm11 8v10H6V10h12z'],
   ['rosters','Squads','M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z'],
+  ['draft','Draft','M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'],
   ['money','Money','M12 2v2.2c2.3.2 4 1.5 4 3.3h-2.2c0-.8-.9-1.4-1.8-1.5v3.3c2.6.5 4 1.6 4 3.6 0 2-1.7 3.4-4 3.6V20h-1.5v-2.5c-2.5-.2-4.3-1.6-4.3-3.6h2.2c0 .9 1 1.6 2.1 1.7v-3.5C7.9 11.6 6.6 10.5 6.6 8.6c0-1.9 1.7-3.2 3.9-3.4V2H12z'],
   ['waivers','Waiver wire','M3 5h18v2H3V5zm0 6h12v2H3v-2zm0 6h18v2H3v-2z'],
   ['moves','Moves','M7 7h10l-3-3 1.4-1.4L21 8l-5.6 5.4L14 12l3-3H7V7zm10 10H7l3 3-1.4 1.4L3 16l5.6-5.4L10 12l-3 3h10v2z'],
