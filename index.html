@@ -138,12 +138,14 @@ tr.lead .bar i{background:var(--gold)}
 .tile .cf{font-size:10px;letter-spacing:.09em;text-transform:uppercase;opacity:.75;font-weight:700}
 
 /* ---------- weeks ---------- */
-.weekbar{display:flex;gap:6px;overflow-x:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch}
-.weekbar button{
-  flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:7px;
-  padding:8px 13px;font:inherit;font-weight:600;font-size:13px;cursor:pointer;color:var(--muted)
+.weekbar{padding:2px 0 14px}
+.weekbar select{
+  width:100%;border:1px solid var(--line);background:#fff;border-radius:8px;
+  padding:11px 13px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;
+  color:var(--ink);appearance:none;-webkit-appearance:none;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2369737F"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat:no-repeat;background-position:right 12px center;background-size:18px
 }
-.weekbar button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
 .ownerblock{margin-bottom:14px}
 .ownerblock .oh{
   display:flex;align-items:baseline;justify-content:space-between;gap:12px;
@@ -479,7 +481,9 @@ V.standings = ()=>{
 
 V.weeks = (wk)=>{
   const cur = wk ?? (hasResults ? Math.max(...played.map(g=>g.week)) : weeks[0]);
-  const bar = weeks.map(w=>`<button class="${w===cur?'on':''}" onclick="go('weeks',${w})">Wk ${w}</button>`).join('');
+  const bar = `<select onchange="go('weeks',Number(this.value))">
+    ${weeks.map(w=>`<option value="${w}" ${w===cur?'selected':''}>Week ${w}</option>`).join('')}
+  </select>`;
   const blocks = D.owners.map(o=>{
     const roster=new Set(currentRoster(o));
     const gs = D.games.filter(g=>g.week===cur && (
