@@ -144,15 +144,23 @@ tr.lead .bar i{background:var(--gold)}
   padding:8px 13px;font:inherit;font-weight:600;font-size:13px;cursor:pointer;color:var(--muted)
 }
 .weekbar button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
-.ownerblock{margin-bottom:14px}
+.ownerblock{margin-bottom:10px;border-radius:9px;overflow:hidden}
 .ownerblock .oh{
   display:flex;align-items:baseline;justify-content:space-between;gap:12px;
-  padding:11px 16px;background:var(--brand);color:#fff;border-radius:9px 9px 0 0;
+  padding:11px 16px;background:var(--brand);color:#fff;cursor:pointer;
+  list-style:none;position:relative;padding-right:36px;
 }
+.ownerblock .oh::-webkit-details-marker{display:none}
+.ownerblock .oh::after{
+  content:"";position:absolute;right:16px;top:50%;width:9px;height:9px;
+  border-right:2px solid rgba(255,255,255,.75);border-bottom:2px solid rgba(255,255,255,.75);
+  transform:translateY(-70%) rotate(45deg);transition:transform .15s ease;
+}
+.ownerblock[open] .oh::after{transform:translateY(-30%) rotate(-135deg)}
 .ownerblock .oh .nm{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:700;text-transform:uppercase}
 .ownerblock .oh .wk{font-size:13px;font-weight:600}
 .ownerblock .oh .wk b{color:var(--gold);font-size:17px;font-family:"Barlow Condensed",sans-serif}
-.games{background:#fff;border:1px solid var(--line);border-top:0;border-radius:0 0 9px 9px}
+.games{background:#fff;border:1px solid var(--line);border-top:0}
 .g{display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:1px solid #EFF2F5;font-size:14px}
 .g:last-child{border-bottom:0}
 .g .res{
@@ -477,49 +485,44 @@ V.standings = ()=>{
   </div>`;
 };
 
-V.weeks = (arg)=>{
-  // arg packs both the picked week and the picked squad as "week:owner" so one
-  // click target (go) can carry both. Falls back to the latest week and the
-  // first owner when nothing's been picked yet.
-  const [wkPart,ownerPart] = (arg!=null? String(arg) : '').split(':');
-  const cur = wkPart ? Number(wkPart) : (hasResults ? Math.max(...played.map(g=>g.week)) : weeks[0]);
-  const curOwner = ownerPart || D.owners[0];
-  const bar = weeks.map(w=>`<button class="${w===cur?'on':''}" onclick="go('weeks','${w}:${curOwner}')">Wk ${w}</button>`).join('');
-  const tabs = D.owners.map(o=>`<button class="${o===curOwner?'on':''}" onclick="go('weeks','${cur}:${o}')">${esc(o)}</button>`).join('');
+V.weeks = (wk)=>{
+  const cur = wk ?? (hasResults ? Math.max(...played.map(g=>g.week)) : weeks[0]);
+  const bar = weeks.map(w=>`<button class="${w===cur?'on':''}" onclick="go('weeks',${w})">Wk ${w}</button>`).join('');
 
-  const o = curOwner;
-  const gs = D.games.filter(g=>g.week===cur && (
-    ownerAt(g.home,g.date)===o || ownerAt(g.away,g.date)===o));
-  const pts = weeklyPoints(o,cur);
-  const rows = gs.length? gs.map(g=>{
-    const mine = ownerAt(g.home,g.date)===o ? g.home : g.away;
-    const opp  = mine===g.home ? g.away : g.home;
-    const win=winnerOf(g);
-    const st = win==null ? 'p' : (win===mine?'w':'l');
-    const mark = win==null ? '–' : (win===mine?'W':'L');
-    const sc = (g.homePts!=null)? `${g.homePts}–${g.awayPts}` : '';
-    const isH = h2h(g);
-    const oppOwner = ownerAt(opp,g.date);
-    return `<div class="g">
-      <div class="res ${st}">${mark}</div>
-      <div class="mt">${chip(mine)}
-        <div class="vs">vs ${esc(opp)}${isH&&oppOwner?` <span class="badge">$1 vs ${esc(oppOwner)}</span>`:''}</div>
-      </div>
-      <div class="sc">${sc}</div>
-      <div class="pt">${win===mine?'+1':''}</div>
-    </div>`;
-  }).join('') : `<div class="empty"><p>No games this week.</p></div>`;
-  const block = `<div class="ownerblock">
-    <div class="oh"><div class="nm">${esc(o)}</div><div class="wk">Week ${cur} &nbsp;<b>+${pts}</b></div></div>
-    <div class="games">${rows}</div>
-  </div>`;
-
+  const blocks = D.owners.map((o,i)=>{
+    const gs = D.games.filter(g=>g.week===cur && (
+      ownerAt(g.home,g.date)===o || ownerAt(g.away,g.date)===o));
+    const pts = weeklyPoints(o,cur);
+    const rows = gs.length? gs.map(g=>{
+      const mine = ownerAt(g.home,g.date)===o ? g.home : g.away;
+      const opp  = mine===g.home ? g.away : g.home;
+      const win=winnerOf(g);
+      const st = win==null ? 'p' : (win===mine?'w':'l');
+      const mark = win==null ? '–' : (win===mine?'W':'L');
+      const sc = (g.homePts!=null)? `${g.homePts}–${g.awayPts}` : '';
+      const isH = h2h(g);
+      const oppOwner = ownerAt(opp,g.date);
+      return `<div class="g">
+        <div class="res ${st}">${mark}</div>
+        <div class="mt">${chip(mine)}
+          <div class="vs">vs ${esc(opp)}${isH&&oppOwner?` <span class="badge">$1 vs ${esc(oppOwner)}</span>`:''}</div>
+        </div>
+        <div class="sc">${sc}</div>
+        <div class="pt">${win===mine?'+1':''}</div>
+      </div>`;
+    }).join('') : `<div class="empty"><p>No games this week.</p></div>`;
+    // First squad starts expanded so the page isn't empty on load; the rest
+    // stay collapsed so all six squads fit on screen without scrolling past them.
+    return `<details class="ownerblock" ${i===0?'open':''}>
+      <summary class="oh"><div class="nm">${esc(o)}</div><div class="wk">Week ${cur} &nbsp;<b>+${pts}</b></div></summary>
+      <div class="games">${rows}</div>
+    </details>`;
+  }).join('');
   return `
   <div class="phead"><h1>Week ${cur}</h1>
     <p>Every game your teams play, and exactly where each point came from.</p></div>
   <div class="weekbar">${bar}</div>
-  <div class="weekbar">${tabs}</div>
-  ${block}`;
+  ${blocks}`;
 };
 
 V.rosters = ()=>{
