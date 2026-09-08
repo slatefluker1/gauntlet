@@ -596,12 +596,20 @@ V.money = ()=>{
   });
   const maxY=Math.max(1,...series.flatMap(s=>s.pts));
   const W=560,H=180,PX=26,PY=12;
-  const x=i=>PX+ i*(W-PX-8)/Math.max(1,weeks.length-1);
   const y=v=>H-PY- v*(H-PY*2)/maxY;
   const palette=['#1B2A41','#C8A24A','#1B7F4B','#B3261E','#5B3C8A','#1B4E8A'];
-  const lines = series.map((s,i)=>{
-    const d=s.pts.map((v,j)=>`${j?'L':'M'}${x(j).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-    return `<path d="${d}" fill="none" stroke="${palette[i]}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const groupW=(W-PX-4)/Math.max(1,weeks.length);
+  const barGap=1.5, barW=Math.max(1,(groupW-barGap*(series.length+1))/series.length);
+  const bars = weeks.map((wk,j)=>{
+    const groupX=PX+j*groupW;
+    return series.map((s,i)=>{
+      const v=s.pts[j];
+      const bx=groupX+barGap+i*(barW+barGap);
+      const by=y(v);
+      return `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${barW.toFixed(1)}" `+
+             `height="${(H-PY-by).toFixed(1)}" rx="1" fill="${palette[i]}">`+
+             `<title>${esc(s.o)} — Week ${wk}: ${money(v)}</title></rect>`;
+    }).join('');
   }).join('');
   const grid=[0,.5,1].map(f=>{
     const v=Math.round(maxY*f);
@@ -637,7 +645,7 @@ V.money = ()=>{
     <div class="card-h"><h2>Running total</h2><span class="hint">cumulative $ by week</span></div>
     <div class="chart"><div class="chartwrap">
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Cumulative money won by week">
-        ${grid}${lines}
+        ${grid}${bars}
       </svg>
     </div></div>
     <div class="legend">${legend}</div>
