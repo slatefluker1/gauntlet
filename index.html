@@ -477,42 +477,49 @@ V.standings = ()=>{
   </div>`;
 };
 
-V.weeks = (wk)=>{
-  const cur = wk ?? (hasResults ? Math.max(...played.map(g=>g.week)) : weeks[0]);
-  const bar = weeks.map(w=>`<button class="${w===cur?'on':''}" onclick="go('weeks',${w})">Wk ${w}</button>`).join('');
-  const blocks = D.owners.map(o=>{
-    const roster=new Set(currentRoster(o));
-    const gs = D.games.filter(g=>g.week===cur && (
-      ownerAt(g.home,g.date)===o || ownerAt(g.away,g.date)===o));
-    const pts = weeklyPoints(o,cur);
-    const rows = gs.length? gs.map(g=>{
-      const mine = ownerAt(g.home,g.date)===o ? g.home : g.away;
-      const opp  = mine===g.home ? g.away : g.home;
-      const win=winnerOf(g);
-      const st = win==null ? 'p' : (win===mine?'w':'l');
-      const mark = win==null ? '–' : (win===mine?'W':'L');
-      const sc = (g.homePts!=null)? `${g.homePts}–${g.awayPts}` : '';
-      const isH = h2h(g);
-      const oppOwner = ownerAt(opp,g.date);
-      return `<div class="g">
-        <div class="res ${st}">${mark}</div>
-        <div class="mt">${chip(mine)}
-          <div class="vs">vs ${esc(opp)}${isH&&oppOwner?` <span class="badge">$1 vs ${esc(oppOwner)}</span>`:''}</div>
-        </div>
-        <div class="sc">${sc}</div>
-        <div class="pt">${win===mine?'+1':''}</div>
-      </div>`;
-    }).join('') : `<div class="empty"><p>No games this week.</p></div>`;
-    return `<div class="ownerblock">
-      <div class="oh"><div class="nm">${esc(o)}</div><div class="wk">Week ${cur} &nbsp;<b>+${pts}</b></div></div>
-      <div class="games">${rows}</div>
+V.weeks = (arg)=>{
+  // arg packs both the picked week and the picked squad as "week:owner" so one
+  // click target (go) can carry both. Falls back to the latest week and the
+  // first owner when nothing's been picked yet.
+  const [wkPart,ownerPart] = (arg!=null? String(arg) : '').split(':');
+  const cur = wkPart ? Number(wkPart) : (hasResults ? Math.max(...played.map(g=>g.week)) : weeks[0]);
+  const curOwner = ownerPart || D.owners[0];
+  const bar = weeks.map(w=>`<button class="${w===cur?'on':''}" onclick="go('weeks','${w}:${curOwner}')">Wk ${w}</button>`).join('');
+  const tabs = D.owners.map(o=>`<button class="${o===curOwner?'on':''}" onclick="go('weeks','${cur}:${o}')">${esc(o)}</button>`).join('');
+
+  const o = curOwner;
+  const gs = D.games.filter(g=>g.week===cur && (
+    ownerAt(g.home,g.date)===o || ownerAt(g.away,g.date)===o));
+  const pts = weeklyPoints(o,cur);
+  const rows = gs.length? gs.map(g=>{
+    const mine = ownerAt(g.home,g.date)===o ? g.home : g.away;
+    const opp  = mine===g.home ? g.away : g.home;
+    const win=winnerOf(g);
+    const st = win==null ? 'p' : (win===mine?'w':'l');
+    const mark = win==null ? '–' : (win===mine?'W':'L');
+    const sc = (g.homePts!=null)? `${g.homePts}–${g.awayPts}` : '';
+    const isH = h2h(g);
+    const oppOwner = ownerAt(opp,g.date);
+    return `<div class="g">
+      <div class="res ${st}">${mark}</div>
+      <div class="mt">${chip(mine)}
+        <div class="vs">vs ${esc(opp)}${isH&&oppOwner?` <span class="badge">$1 vs ${esc(oppOwner)}</span>`:''}</div>
+      </div>
+      <div class="sc">${sc}</div>
+      <div class="pt">${win===mine?'+1':''}</div>
     </div>`;
-  }).join('');
+  }).join('') : `<div class="empty"><p>No games this week.</p></div>`;
+  const block = `<div class="ownerblock">
+    <div class="oh"><div class="nm">${esc(o)}</div><div class="wk">Week ${cur} &nbsp;<b>+${pts}</b></div></div>
+    <div class="games">${rows}</div>
+  </div>`;
+
   return `
   <div class="phead"><h1>Week ${cur}</h1>
     <p>Every game your teams play, and exactly where each point came from.</p></div>
   <div class="weekbar">${bar}</div>
-  ${blocks}`;
+  <div class="weekbar">${tabs}</div>
+  ${block}`;
 };
 
 V.rosters = ()=>{
@@ -581,42 +588,29 @@ V.money = ()=>{
       <td class="pts">${money(m[o])}</td>
     </tr>`).join('');
 
-  /* cumulative chart */
-  const series = D.owners.map(o=>{
-    let run=0;
-    return {o, pts: weeks.map(w=>{
-      for(const g of played){
-        if(g.week!==w) continue;
-        if(!h2h(g)) continue;
-        const win=winnerOf(g); if(!win) continue;
-        if(ownerAt(win,g.date)===o) run++;
-      }
-      return run;
-    })};
-  });
-  const maxY=Math.max(1,...series.flatMap(s=>s.pts));
+  /* one bar per owner, ranked by money won */
+  const ranked = D.owners.slice().sort((a,b)=>m[b]-m[a]);
+  const maxY=Math.max(1,...ranked.map(o=>m[o]));
   const W=560,H=180,PX=26,PY=12;
   const y=v=>H-PY- v*(H-PY*2)/maxY;
   const palette=['#1B2A41','#C8A24A','#1B7F4B','#B3261E','#5B3C8A','#1B4E8A'];
-  const groupW=(W-PX-4)/Math.max(1,weeks.length);
-  const barGap=1.5, barW=Math.max(1,(groupW-barGap*(series.length+1))/series.length);
-  const bars = weeks.map((wk,j)=>{
-    const groupX=PX+j*groupW;
-    return series.map((s,i)=>{
-      const v=s.pts[j];
-      const bx=groupX+barGap+i*(barW+barGap);
-      const by=y(v);
-      return `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${barW.toFixed(1)}" `+
-             `height="${(H-PY-by).toFixed(1)}" rx="1" fill="${palette[i]}">`+
-             `<title>${esc(s.o)} — Week ${wk}: ${money(v)}</title></rect>`;
-    }).join('');
+  const groupW=(W-PX-4)/Math.max(1,ranked.length);
+  const barGap=groupW*0.22, barW=groupW-barGap;
+  const bars = ranked.map((o,i)=>{
+    const v=m[o];
+    const bx=PX+i*groupW+barGap/2;
+    const by=y(v);
+    return `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${barW.toFixed(1)}" `+
+           `height="${(H-PY-by).toFixed(1)}" rx="2" fill="${palette[i%palette.length]}">`+
+           `<title>${esc(o)}: ${money(v)}</title></rect>`+
+           `<text x="${(bx+barW/2).toFixed(1)}" y="${H-1}" font-size="10" text-anchor="middle" `+
+           `fill="#69737F" font-family="Inter,sans-serif" font-weight="600">${esc(o)}</text>`;
   }).join('');
   const grid=[0,.5,1].map(f=>{
     const v=Math.round(maxY*f);
     return `<line x1="${PX}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="#E6EAEF" stroke-width="1"/>
             <text x="0" y="${y(v)+4}" font-size="10" fill="#8A939C" font-family="Roboto Mono,monospace">$${v}</text>`;
   }).join('');
-  const legend = series.map((s,i)=>`<span><i style="background:${palette[i]}"></i>${esc(s.o)}</span>`).join('');
 
   const items = played.filter(g=>h2h(g)&&winnerOf(g)).sort((a,b)=>b.date.localeCompare(a.date)).map(g=>{
     const w=winnerOf(g), o=ownerAt(w,g.date);
@@ -642,13 +636,12 @@ V.money = ()=>{
     <table><tbody>${board}</tbody></table>
   </div>
   <div class="card">
-    <div class="card-h"><h2>Running total</h2><span class="hint">cumulative $ by week</span></div>
+    <div class="card-h"><h2>Money won</h2><span class="hint">by squad</span></div>
     <div class="chart"><div class="chartwrap">
-      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Cumulative money won by week">
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Money won by squad">
         ${grid}${bars}
       </svg>
     </div></div>
-    <div class="legend">${legend}</div>
   </div>
   <div class="card">
     <div class="card-h"><h2>Every dollar</h2><span class="hint">${played.filter(g=>h2h(g)&&winnerOf(g)).length} paid</span></div>
