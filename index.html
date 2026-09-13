@@ -486,7 +486,7 @@ V.standings = ()=>{
 };
 
 V.weeks = (wk)=>{
-  const cur = wk ?? (hasResults ? Math.max(...played.map(g=>g.week)) : weeks[0]);
+  const cur = wk ?? (hasResults ? Math.min(Math.max(...played.map(g=>g.week))+1, weeks[weeks.length-1]) : weeks[0]);
   const bar = weeks.map(w=>`<button class="${w===cur?'on':''}" onclick="go('weeks',${w})">Wk ${w}</button>`).join('');
 
   const blocks = D.owners.map((o,i)=>{
