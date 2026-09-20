@@ -257,24 +257,6 @@ svg{display:block;width:100%;height:100%;overflow:visible}
 .empty p{margin:0;font-size:13.5px;max-width:400px;margin-inline:auto}
 
 /* ---------- scoring ledger ---------- */
-.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:16px}
-.rule{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
-.rule .k{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:700}
-.rule .v{font-family:"Barlow Condensed",sans-serif;font-size:30px;font-weight:700;line-height:1.05;margin-top:3px}
-.rule p{margin:6px 0 0;font-size:13px;color:var(--muted)}
-.steps{margin:0;padding:14px 18px 14px 36px;font-size:13.5px;color:var(--muted)}
-.steps li{margin:4px 0}
-.steps b{color:var(--ink)}
-.recon tr.r1 td{border-bottom:0;padding-bottom:2px}
-.recon td.brk{font-size:12.5px;color:var(--muted);padding-top:0;padding-bottom:14px}
-.recon .chk{font-weight:700;font-size:13px;white-space:nowrap}
-.chk.ok{color:var(--win)}
-.chk.bad{color:var(--loss)}
-.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
-  padding:12px 16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
-.toolbar button{font:inherit;font-weight:600;font-size:13px;background:var(--brand);color:#fff;
-  border:0;border-radius:7px;padding:7px 13px;cursor:pointer}
-.toolbar button:hover{background:var(--brand-2)}
 .tb-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
   padding:10px 14px;background:#F4F6F9;border-bottom:1px solid #EFF2F5;border-top:1px solid var(--line)}
 .tb-h .held{font-size:12px;color:var(--muted);margin-top:3px}
@@ -282,8 +264,6 @@ svg{display:block;width:100%;height:100%;overflow:visible}
 .tb-f{padding:8px 14px;font-size:12px;color:var(--muted);border-top:1px solid #EFF2F5}
 .g .dt{font-size:12px;color:var(--muted);width:44px;flex:0 0 44px}
 .g .pt.z{color:#B9C0C8}
-.formal{padding:12px 16px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
-.formal b{color:var(--ink)}
 
 /* ---------- mobile ---------- */
 @media (max-width:860px){
@@ -732,11 +712,10 @@ V.moves = ()=>{
 };
 
 /* ============ scoring ledger ============ */
-/* This walks the ledger the opposite way from pointsByOwner(): for every ownership
-   stint it takes the games that team played while held and gives the squad a point
-   for each one the team won. pointsByOwner() goes from game winner -> who owned the
-   winner that day. The page shows both totals and flags any disagreement instead of
-   hiding it -- that cross-check is the point of the page. */
+/* Walks the ledger the opposite way from pointsByOwner(): for every ownership stint,
+   take the games that team played while held and give the squad a point per win.
+   pointsByOwner() goes from game winner -> who owned the winner that day. Scoring
+   page shows this view, and warns if the two ever disagree. */
 function fmtDay(iso){
   return new Date(iso+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
@@ -781,75 +760,9 @@ function reconcile(){
     return {o,total,games,parts,standing:p[o],ok:total===p[o],teams:L[o]};
   });
 }
-function ledgerCSV(L){
-  const q=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
-  const head=['Squad','Team','Held from','Held to','Acquired via','Week','Date','Home/Away',
-              'Opponent','Opponent squad','Team score','Opponent score','Result','Points'];
-  const lines=[head.join(',')];
-  for(const o of D.owners) for(const t of L[o]) for(const r of t.rows){
-    lines.push([o,t.s.team,t.s.start||'',t.s.end||'',t.s.via||'',r.g.week,r.g.date,
-      r.isHome?'Home':'Away',r.opp,r.oppOwner||'',r.mine,r.theirs,r.result,r.pt].map(q).join(','));
-  }
-  return lines.join('\n');
-}
-function downloadLedger(){
-  const blob=new Blob([ledgerCSV(scoringLedger())],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='gauntlet-scoring-ledger-'+D.generated+'.csv';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-}
 
 V.scoring = ()=>{
   const rec=reconcile(), allOk=rec.every(r=>r.ok);
-  const totalWins=rec.reduce((a,r)=>a+r.total,0);
-
-  const rules = `<div class="rules">
-    <div class="rule"><div class="k">Win</div><div class="v">+1</div>
-      <p>Any regular-season win by a team on your squad, against any opponent.</p></div>
-    <div class="rule"><div class="k">Loss</div><div class="v">0</div>
-      <p>A loss scores nothing and costs nothing.</p></div>
-    <div class="rule"><div class="k">Who gets the point</div><div class="v">Game day</div>
-      <p>Whoever held the team on the date of the game. Points never move with a team.</p></div>
-  </div>`;
-
-  const steps = `<div class="card">
-    <div class="card-h"><h2>Check it yourself</h2></div>
-    <ol class="steps">
-      <li><b>Open a squad</b> below. Every team it has held is listed, with each game played while it held that team.</li>
-      <li><b>Count the green W rows.</b> Each one is +1. That count is the squad&rsquo;s points.</li>
-      <li><b>Add the teams up</b> and compare with the Standings page. The table below does that sum for every squad.</li>
-      <li>A team that changed hands is listed under both squads, and each squad only gets games inside its own dates. The dates come from the <a href="#" onclick="go('moves');return false">Moves</a> page.</li>
-    </ol>
-    <div class="formal">A <span class="badge" style="margin-left:0">$1 vs squad</span> tag marks a game against another squad. That dollar is tracked on the Money page and doesn&rsquo;t change points.
-      Postseason points (conference title game, playoff rounds) are not part of the Standings yet.
-      If squads tie on points, the constitution breaks it on postseason points, then playoff points, then draft position (the later first-round pick wins) &mdash; right now that is draft position.</div>
-  </div>`;
-
-  const body = rec.map(r=>`
-    <tr class="r1">
-      <td class="who">${esc(r.o)}</td>
-      <td class="pts">${r.total}</td>
-      <td class="pts" style="opacity:.55">${r.standing}</td>
-      <td class="chk ${r.ok?'ok':'bad'}">${r.ok?'&#10003; Match':'&#10007; Mismatch'}</td>
-    </tr>
-    <tr class="r2"><td class="brk" colspan="4">${r.parts.length? r.parts.map(esc).join(' + ')+' = '+r.total : 'No wins yet'}</td></tr>`).join('');
-
-  const recon = `<div class="card recon">
-    <div class="card-h"><h2>Reconciliation</h2><span class="hint">ledger total vs. Standings</span></div>
-    <table>
-      <thead><tr><th>Squad</th><th style="text-align:right">Ledger</th><th style="text-align:right">Standings</th><th></th></tr></thead>
-      <tbody>${body}</tbody>
-    </table>
-    <div class="formal">${allOk
-      ? `Every squad&rsquo;s team-by-team total matches the Standings page. <b>${totalWins}</b> win${totalWins===1?'':'s'} credited league-wide.`
-      : `<b style="color:var(--loss)">At least one squad does not match.</b> The ledger and the Standings are computed two different ways, so a mismatch means something needs a look.`}</div>
-    <div class="toolbar">
-      <span>Final scores come from the College Football Data API. Updated ${esc(D.generated)}.</span>
-      <button type="button" onclick="downloadLedger()">Download full ledger (CSV)</button>
-    </div>
-  </div>`;
 
   const squads = rec.map((r,i)=>{
     const blocks = r.teams.map(t=>{
@@ -883,11 +796,13 @@ V.scoring = ()=>{
     </details>`;
   }).join('');
 
-  return `<div class="phead"><h1>Scoring</h1>
-    <p>Every point on the Standings page, traced back to the game that earned it.</p></div>
-    ${rules}${steps}${recon}
-    <div class="phead" style="margin-top:22px"><h1 style="font-size:26px">Every point, by squad</h1></div>
-    ${squads}`;
+  // Silent while the ledger and the Standings agree; only shows if they ever don't.
+  const mismatch = allOk ? '' : `<div class="warn"><h3>Scoring check &mdash; a squad's ledger total doesn't match the Standings</h3>
+    <ul>${rec.filter(r=>!r.ok).map(r=>`<li><b>${esc(r.o)}</b> &mdash; ledger ${r.total}, Standings ${r.standing}</li>`).join('')}</ul></div>`;
+
+  return `<div class="phead"><h1>Every point, by squad</h1>
+    <p>Each squad&rsquo;s teams, and every game that earned a point.</p></div>
+    ${mismatch}${squads}`;
 };
 
 /* ============ router ============ */
