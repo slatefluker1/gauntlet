@@ -503,12 +503,24 @@ V.weeks = (wk)=>{
       ownerAt(g.home,g.date)===o || ownerAt(g.away,g.date)===o));
     const pts = weeklyPoints(o,cur);
     const rows = gs.length? gs.map(g=>{
+      const win=winnerOf(g);
+      const sc = (g.homePts!=null)? `${g.homePts}–${g.awayPts}` : '';
+      if(ownerAt(g.home,g.date)===o && ownerAt(g.away,g.date)===o){
+        // Both teams belong to this squad: show both; the game is worth exactly 1 pt to the owner.
+        const tag=t=>win===t?' <b>✓</b>':'';
+        return `<div class="g">
+          <div class="res ${win==null?'p':'w'}">${win==null?'–':'W'}</div>
+          <div class="mt">${chip(g.home)}${tag(g.home)}
+            <div class="vs">vs ${chip(g.away)}${tag(g.away)} <span class="badge">Both yours · 1 pt</span></div>
+          </div>
+          <div class="sc">${sc}</div>
+          <div class="pt">${win!=null?'+1':''}</div>
+        </div>`;
+      }
       const mine = ownerAt(g.home,g.date)===o ? g.home : g.away;
       const opp  = mine===g.home ? g.away : g.home;
-      const win=winnerOf(g);
       const st = win==null ? 'p' : (win===mine?'w':'l');
       const mark = win==null ? '–' : (win===mine?'W':'L');
-      const sc = (g.homePts!=null)? `${g.homePts}–${g.awayPts}` : '';
       const isH = h2h(g);
       const oppOwner = ownerAt(opp,g.date);
       return `<div class="g">
